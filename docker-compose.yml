@@ -1,0 +1,21 @@
+version: '2'
+services:
+    db:
+        image: mysql
+        volumes:
+            - "./.data/db:/var/lib/mysql"
+        environment:
+            MYSQL_DATABASE: 'db'
+            MYSQL_ROOT_PASSWORD: 'root'
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'pass'
+        ports:
+            - '3306:3306'
+        expose:
+            # Opens port 3306 on the container
+            - '3306'
+            # Where our data will be persisted
+        volumes:
+          - web_server_db:/var/lib/mysql
+volumes:
+  web_server_db:

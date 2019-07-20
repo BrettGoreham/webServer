@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: #28CBFF;
+        }
+        div {
+            font-family: Arial;
+        }
+        h2 {
+            font-family: Arial;
+        }
+
+        button {font-family: Arial;}
+
+        .alignCenter {
+            margin: auto;
+            text-align: center;
+        }
+
+        .alignFloatRight {
+            float: right;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 25% 25% 25% 25%;
+            padding: 10px;
+        }
+        .grid-item {
+            background-color: #83b2f3;
+            border: 1px solid rgba(0, 0, 0, 0.8);
+            border-radius: 25px;
+            margin: 15px;
+            padding: 20px;
+        }
+
+        .list {
+            list-style-type: none;
+            display: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .list-item{
+            background-color: #00E1EF;
+            border-radius: 25px;
+            margin-bottom: 10px;
+        }
+
+        .disabled{
+
+        }
+
+
+        .select-button {
+            border-radius: 15px;
+            height: 40px;
+            width: auto;
+            background-color: #A2F995;
+            text-align: center;
+            display: inline-block;
+
+            font-size: 20px;
+        }
+
+        .hide-button {
+            background-color: #83b2f3;
+            border: 1px solid rgba(0, 0, 0, 0.8);;
+            color: white;
+
+            height: 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            border-radius: 40px;
+        }
+    </style>
+    <title>What Is For Dinner Tonight</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script type="text/javascript" th:src="@{/js/baseJs.js}"></script>
+    <script>
+
+        function startRandomSelection() {
+            document.getElementById("start").disabled = true;
+            document.getElementById("start").innerHTML = "Finding dinner..."
+            reset();
+
+            var allMealCateogries = document.getElementsByClassName("grid-item");
+            var numberOfRandomSelects = Math.floor(allMealCateogries.length * 3);
+
+            console.log("number of selects to start = " + numberOfRandomSelects);
+            setTimeoutForSelectedIndex(numberOfRandomSelects, allMealCateogries, -1)
+        }
+
+        function reset() {
+            var allMealCateogries = document.getElementsByClassName("grid-item");
+            for (var i = 0; i < allMealCateogries.length; i++) {
+                makeElementUnselected(allMealCateogries[i], "#83b2f3");
+            }
+
+            var allMealOptions = document.getElementsByClassName("list-item");
+            for (var i = 0; i < allMealOptions.length; i++) {
+                makeElementUnselected(allMealOptions[i], "#00E1EF");
+            }
+        }
+
+        function setTimeoutForSelectedIndex(numberOfRandomLeftSelects, listOfElements, lastSelectedIndex) {
+
+            console.log("number of selects to go = " + numberOfRandomLeftSelects);
+            if (lastSelectedIndex > -1) {
+                makeElementUnselected(listOfElements[lastSelectedIndex], '#83b2f3');
+            }
+
+            var selected = Math.floor(Math.random() * listOfElements.length);
+
+            if (numberOfRandomLeftSelects == 1) {
+                finishMealCategory(listOfElements[selected]);
+            }
+            else {
+                makeElementSelected(listOfElements[selected], '#F9F871');
+
+                var timeout = calculateTimeout(numberOfRandomLeftSelects);
+
+                setTimeout(setTimeoutForSelectedIndex, timeout, numberOfRandomLeftSelects - 1, listOfElements, selected);
+            }
+        }
+
+        function makeElementSelected(element, color){
+            element.style.backgroundColor = color;
+        }
+
+        function makeElementUnselected(element, color) {
+            if (element) {
+               element.style.backgroundColor = color;
+            }
+        }
+
+        function finishMealCategory(element) {
+            makeElementSelected(element, '#3DF1C6')
+
+            list = element.getElementsByClassName("list")[0];
+            list.style.display = "block";
+
+            hideButton = element.getElementsByClassName("hide-button")[0];
+            hideButton.innerHTML = "Hide Meals -";
+
+            startMealOptionSelection(element);
+        }
+
+        function startMealOptionSelection(mealCategoryElement) {
+            var allMealOptionsInCategory = mealCategoryElement.getElementsByClassName("list-item");
+
+            if (allMealOptionsInCategory.length > 1) {
+                var numberOfRandomSelects = Math.max(Math.floor(Math.random() * allMealOptionsInCategory.length)
+                                                + Math.floor(Math.random() * (15 * allMealOptionsInCategory.length)), 5);
+
+                console.log("number Of selects chosen: " + numberOfRandomSelects);
+                setTimeout(selectMealOptionUntilRandomSelectsAreDone, 200, allMealOptionsInCategory, 0, numberOfRandomSelects);
+            }
+            else {
+                finishMealOption(allMealOptionsInCategory[0]);
+            }
+        }
+
+        function selectMealOptionUntilRandomSelectsAreDone(listOptions, currentSelectNum, stopSelect) {
+
+            indexSelected = currentSelectNum % listOptions.length;
+            lastSelected = (currentSelectNum - 1)  % listOptions.length;
+            if (lastSelected >= 0){
+                makeElementUnselected(listOptions[lastSelected], "#00E1EF");
+            }
+
+            if(currentSelectNum == stopSelect) {
+                finishMealOption(listOptions[indexSelected]);
+            }
+            else {
+                makeElementSelected(listOptions[indexSelected], '#F9F871');
+
+                var timeout = calculateTimeout(stopSelect - currentSelectNum);
+                var nextSelect = currentSelectNum + 1;
+                setTimeout(selectMealOptionUntilRandomSelectsAreDone, timeout, listOptions, nextSelect, stopSelect);
+            }
+
+
+        }
+
+        function finishMealOption(finalChosenMeal) {
+            finalChosenMeal.style.backgroundColor = "#A2F995";
+            document.getElementById("start").disabled = false;
+            document.getElementById("start").innerHTML = "Try Again?"
+        }
+
+        function toggleList(button){
+            console.log("togglyList")
+            divButtonBelongsTo = button.parentNode;
+            list = divButtonBelongsTo.getElementsByClassName("list");
+
+            if (button.innerHTML === "See Meals +") {
+               button.innerHTML = "Hide Meals -";
+            } else {
+                button.innerHTML = "See Meals +";
+            }
+            toggleHideButton(list[0]);
+        }
+
+        function calculateTimeout(numselectsLeft) {
+            var timeout = 100;
+            if (numselectsLeft <= 5) {
+                timeout = 400
+            }
+            else if ( numselectsLeft <= 15) {
+                timeout = 250;
+            }
+
+            return timeout;
+        }
+
+    </script>
+</head>
+<body>
+
+    <br/>
+    <h4 class="alignCenter" style="font-family: Arial">What Is For Dinner Tonight?</h4>
+
+    <br/> <br/>
+    <div class="alignCenter">
+        <button id="start" class="select-button" onclick="startRandomSelection()" >Pick randomly</button>
+    </div>
+
+
+    <div class="grid-container">
+        <div class="grid-item"  th:each="category : ${mealCategories}">
+            <div class="alignCenter" th:text="${category.categoryName}"></div><br/>
+            <br/><br/>
+            <ul class="list">
+                <li class="list-item" th:each="meal : ${category.mealOptions}">
+                    <div class="alignCenter" th:text="${meal.getMealName()}"></div>
+                </li>
+            </ul>
+            <button class="alignFloatRight hide-button" onclick="toggleList(this)">See Meals +</button>
+        </div>
+    </div>
+
+
+    <div class="alignCenter">Don't see your favourite meal? <a href="/whatIsForDinner/suggestionsForm">See and add suggestions here</a> </div>
+
+</body>
+</html>

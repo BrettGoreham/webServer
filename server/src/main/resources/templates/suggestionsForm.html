@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: #28CBFF;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        button {
+
+        }
+
+        div {
+            font-family: Arial;
+        }
+        h2 {
+            font-family: Arial;
+        }
+
+        button {
+            font-family: Arial;
+            background-color: #A2F995;
+            border-radius: 25px;
+        }
+
+        .alignCenter {
+            margin: auto;
+            text-align: center;
+        }
+
+        .option-choice {
+            text-align: center;
+        }
+    </style>
+
+    <title>What Is For Dinner Tonight</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+
+    <script type="text/javascript" th:src="@{/js/baseJs.js}"></script>
+    <script>
+
+        var lastChosenList = null;
+
+        function onCategorySelect() {
+            var e = document.getElementById("categories");
+            var strCategory = e.options[e.selectedIndex].value;
+
+            var categoryText = document.getElementById("categoryText");
+
+            if (strCategory == "Select A Category") {
+                if (lastChosenList != null) {
+                   toggleHideButton(lastChosenList);
+                   lastChosenList = null;
+                }
+                categoryText.readOnly = false;
+            }
+            else {
+                if (lastChosenList != null) {
+                    toggleHideButton(lastChosenList);
+                }
+
+                lastChosenList = document.getElementById(strCategory);
+                if (lastChosenList != null) {
+                    toggleHideButton(lastChosenList);
+                }
+
+                categoryText.readOnly = true;
+            }
+        }
+
+        function addNewMealOption(){
+            var list = document.getElementById("list");
+
+            var li = document.createElement("li");
+            li.innerHTML = "<input class='option-choice' type=\"text\"/>";
+
+            list.appendChild(li);
+
+        }
+
+
+        function handleClick() {
+            console.log("submitted");
+
+            var e = document.getElementById("categories");
+            var strCategory = e.options[e.selectedIndex].value;
+
+            if(strCategory == "Select A Category"){
+                strCategory = document.getElementById("categoryText").value;
+            }
+
+            if(strCategory == ""){
+                alert("Empty Category Not Allowed");
+            }
+            else {
+                formulateAndSubmitRequest(strCategory)
+            }
+        }
+
+        function formulateAndSubmitRequest(categoryStr) {
+            var beginningStr = "/whatIsForDinner/suggestionsForm/submit";
+            var parametersIndicator= "?"
+            var categoryName = "categoryName=" + categoryStr;
+            var and= "&"
+
+            var options = document.getElementsByClassName("option-choice");
+
+            var mealOptions = "";
+            var mealOptionsparamStart = "mealOptions="
+            for (i = 0; i < options.length; i++) {
+                if(options[i].value != "") {
+                    mealOptions = mealOptions + and + mealOptionsparamStart + options[i].value;
+                }
+            }
+
+            window.location.href = beginningStr + parametersIndicator + categoryName + mealOptions;
+
+        }
+    </script>
+</head>
+<body>
+    <br/>
+    <div class="alignCenter">
+        <h2>Suggest a new Category and/or meals.</h2>
+    </div>
+
+    <br/><br/>
+    <form>
+        <div class="alignCenter">
+            <label>Pick a category</label>
+
+            <select id="categories" name="category" onchange="onCategorySelect()">
+                <option>Select A Category</option>
+                <option th:each="category : ${mealCategories}" th:value="${category.getCategoryName()}" th:text="${category.getCategoryName()}"></option>
+            </select>
+
+            <br/><br/>
+            <label>or</label>
+
+            <br/><br/>
+            <label>Suggest a new one.</label>
+
+            <input id="categoryText" name="categoryText" type="text"/>
+
+            <br/><br/>
+            <div th:each="category : ${mealCategories}"  class="alignCenter">
+                <div th:id="${category.getCategoryName()}" style="display: none">
+                    <label>Current accepted and suggested meal options for this category</label>
+                    <ul>
+                        <li th:each="option : ${category.getMealOptions()}">
+                            <div th:text="${option.getMealName()}"></div>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+
+            <br/><br/>
+            <label>Add Meal Options for meal category.</label>
+            <br/><br/>
+            <ul id="list">
+                <li>
+                    <input class="option-choice" type="text"/>
+                </li>
+            </ul>
+            <br/><br/>
+
+            <button type="button" onclick="addNewMealOption()">add another</button>
+
+            <br/><br/>
+            <button type="button" onclick="handleClick()">Submit Suggestions</button>
+
+        </div>
+    </form>
+
+</body>
