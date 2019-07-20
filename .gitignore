@@ -65,4 +65,4 @@ nb-configuration.xml
 ## Project Specific
 ##########################
 
-*.application-prod.properties
+application-prod.properties
