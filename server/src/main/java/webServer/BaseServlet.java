@@ -5,6 +5,8 @@ import database.DogDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import model.DogStat;
+import org.springframework.web.servlet.view.RedirectView;
+import webServer.scheduledTasks.ScheduledEmails;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +17,22 @@ public class BaseServlet {
     @Autowired
     private DogDao dogDao;
 
+    @Autowired
+    private ScheduledEmails scheduledEmails;
+
     @RequestMapping("/")
-    public String index() {
-        return "Greetings from Spring Boot!";
+    public RedirectView index() {
+        return new RedirectView("/whatIsForDinner");
+    }
+
+    @PostMapping("/emailPost")
+    public String  emailPost(@RequestParam String email, @RequestParam String subject, @RequestParam String content) {
+        StringBuilder subjectBuilder = new StringBuilder();
+
+        subjectBuilder.append(subject).append("  from: ").append(email);
+
+        scheduledEmails.sendEmailToBrett(subjectBuilder.toString(), content);
+        return "Email recieved :D";
     }
 
     @GetMapping("/dogStats")

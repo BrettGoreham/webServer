@@ -2,6 +2,7 @@ package webServer.scheduledTasks;
 
 import database.MealDao;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +21,12 @@ public class ScheduledEmails {
 
     @Autowired
     private MealDao mealDao;
+
+    @Value("${spring.mail.username}")
+    private String fromEmailAddr;
+
+    @Value("${to.email.address}")
+    private String toEmailAddr;
 
     //seconds minutes hours daysofmonth monthsofyear daysofweek"
     @Scheduled(cron = "0 0 20 * * MON-FRI")
@@ -67,11 +74,11 @@ public class ScheduledEmails {
 
     }
 
-    private void sendEmailToBrett(String subject, String content) {
+    public void sendEmailToBrett(String subject, String content) {
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("gorehamwebserver@gmail.com");
-        message.setTo("brettgoreham@gmail.com");
+        message.setFrom(fromEmailAddr);
+        message.setTo(toEmailAddr);
         message.setSubject(subject);
         message.setText(content);
         try {

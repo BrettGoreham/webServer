@@ -14,11 +14,26 @@
             font-family: Arial;
         }
 
+        h3 {
+            font-family: Arial;
+        }
+
+        textarea {
+            resize: none;
+        }
+
         button {font-family: Arial;}
 
         .alignCenter {
             margin: auto;
             text-align: center;
+            vertical-align: middle;
+        }
+
+        .flexCenter {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .alignFloatRight {
@@ -47,18 +62,19 @@
 
         .list-item{
             background-color: #00E1EF;
+            height: 25px;
             border-radius: 25px;
             margin-bottom: 10px;
         }
 
         .disabled{
-
+            background-color: #5a5a5a;
         }
 
 
         .select-button {
             border-radius: 15px;
-            height: 40px;
+            height: 35px;
             width: auto;
             background-color: #A2F995;
             text-align: center;
@@ -79,6 +95,63 @@
             font-size: 12px;
             border-radius: 40px;
         }
+        .disable-button {
+            background-color: #83b2f3;
+            border: 1px solid rgba(0, 0, 0, 0.8);;
+            color: white;
+
+            text-align: center;
+            text-decoration: none;
+            font-size: 10px;
+            border-radius: 40px;
+        }
+
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .hoverColor:hover {
+            background-color: #A2F995;
+        }
+
+
+
     </style>
     <title>What Is For Dinner Tonight</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -91,20 +164,42 @@
             document.getElementById("start").innerHTML = "Finding dinner..."
             reset();
 
-            var allMealCateogries = document.getElementsByClassName("grid-item");
-            var numberOfRandomSelects = Math.floor(allMealCateogries.length * 3);
+            var allDisabledMealCateogries = document.querySelectorAll( '.grid-item:not(.disabled)' );
 
-            console.log("number of selects to start = " + numberOfRandomSelects);
-            setTimeoutForSelectedIndex(numberOfRandomSelects, allMealCateogries, -1)
+            allDisabledMealCateogries = filterCategoriesWithNoOptions(allDisabledMealCateogries);
+
+            if (allDisabledMealCateogries.length > 0) {
+                var numberOfRandomSelects = Math.floor(allDisabledMealCateogries.length * 3);
+
+                setTimeoutForSelectedIndex(numberOfRandomSelects, allDisabledMealCateogries, -1)
+            }
+            else {
+                alert("No enabled categories with enabled meal options available :(");
+                enableStartButton();
+            }
+
+
+        }
+
+        function filterCategoriesWithNoOptions(listOfGridItems) {
+            var filtered = [];
+            for (var i = 0; i < listOfGridItems.length; i++) {
+                if (listOfGridItems[i].querySelectorAll(".list-item:not(.disabled)").length > 0) {
+                    filtered.push(listOfGridItems[i]);
+                }
+            }
+
+            return filtered;
+
         }
 
         function reset() {
-            var allMealCateogries = document.getElementsByClassName("grid-item");
+            var allMealCateogries = document.querySelectorAll( '.grid-item:not(.disabled)' );
             for (var i = 0; i < allMealCateogries.length; i++) {
                 makeElementUnselected(allMealCateogries[i], "#83b2f3");
             }
 
-            var allMealOptions = document.getElementsByClassName("list-item");
+            var allMealOptions = document.querySelectorAll( '.list-item:not(.disabled)' );
             for (var i = 0; i < allMealOptions.length; i++) {
                 makeElementUnselected(allMealOptions[i], "#00E1EF");
             }
@@ -112,7 +207,6 @@
 
         function setTimeoutForSelectedIndex(numberOfRandomLeftSelects, listOfElements, lastSelectedIndex) {
 
-            console.log("number of selects to go = " + numberOfRandomLeftSelects);
             if (lastSelectedIndex > -1) {
                 makeElementUnselected(listOfElements[lastSelectedIndex], '#83b2f3');
             }
@@ -144,23 +238,22 @@
         function finishMealCategory(element) {
             makeElementSelected(element, '#3DF1C6')
 
-            list = element.getElementsByClassName("list")[0];
+            var list = element.getElementsByClassName("list")[0];
             list.style.display = "block";
 
-            hideButton = element.getElementsByClassName("hide-button")[0];
+            var hideButton = element.getElementsByClassName("hide-button")[0];
             hideButton.innerHTML = "Hide Meals -";
 
             startMealOptionSelection(element);
         }
 
         function startMealOptionSelection(mealCategoryElement) {
-            var allMealOptionsInCategory = mealCategoryElement.getElementsByClassName("list-item");
+            var allMealOptionsInCategory = mealCategoryElement.querySelectorAll( '.list-item:not(.disabled)' );
 
             if (allMealOptionsInCategory.length > 1) {
                 var numberOfRandomSelects = Math.max(Math.floor(Math.random() * allMealOptionsInCategory.length)
                                                 + Math.floor(Math.random() * (15 * allMealOptionsInCategory.length)), 5);
 
-                console.log("number Of selects chosen: " + numberOfRandomSelects);
                 setTimeout(selectMealOptionUntilRandomSelectsAreDone, 200, allMealOptionsInCategory, 0, numberOfRandomSelects);
             }
             else {
@@ -170,8 +263,8 @@
 
         function selectMealOptionUntilRandomSelectsAreDone(listOptions, currentSelectNum, stopSelect) {
 
-            indexSelected = currentSelectNum % listOptions.length;
-            lastSelected = (currentSelectNum - 1)  % listOptions.length;
+            var indexSelected = currentSelectNum % listOptions.length;
+            var lastSelected = (currentSelectNum - 1)  % listOptions.length;
             if (lastSelected >= 0){
                 makeElementUnselected(listOptions[lastSelected], "#00E1EF");
             }
@@ -192,22 +285,14 @@
 
         function finishMealOption(finalChosenMeal) {
             finalChosenMeal.style.backgroundColor = "#A2F995";
+            enableStartButton();
+        }
+
+        function enableStartButton() {
             document.getElementById("start").disabled = false;
             document.getElementById("start").innerHTML = "Try Again?"
         }
 
-        function toggleList(button){
-            console.log("togglyList")
-            divButtonBelongsTo = button.parentNode;
-            list = divButtonBelongsTo.getElementsByClassName("list");
-
-            if (button.innerHTML === "See Meals +") {
-               button.innerHTML = "Hide Meals -";
-            } else {
-                button.innerHTML = "See Meals +";
-            }
-            toggleHideButton(list[0]);
-        }
 
         function calculateTimeout(numselectsLeft) {
             var timeout = 100;
@@ -221,14 +306,50 @@
             return timeout;
         }
 
+        function toggleList(button){
+            var divButtonBelongsTo = button.parentNode;
+            var list = divButtonBelongsTo.getElementsByClassName("list");
+
+            if (button.innerHTML === "See Meals +") {
+                button.innerHTML = "Hide Meals -";
+            } else {
+                button.innerHTML = "See Meals +";
+            }
+            toggleHideButton(list[0]);
+        }
+
+        function toggleDisable(button) {
+            var divButtonBelongsTo = button.parentNode;
+
+            toggleDivAndChangeButtonText(divButtonBelongsTo, button);
+        }
+
+        function toggleDisableListItem(listItemButton) {
+            var divButtonBelongsTo = listItemButton.parentNode.parentNode;
+
+            toggleDivAndChangeButtonText(divButtonBelongsTo, listItemButton);
+
+        }
+
+        function toggleDivAndChangeButtonText(div, button) {
+            div.style.backgroundColor = null;
+            div.classList.toggle("disabled");
+            if (button.innerHTML === "Disable") {
+                button.innerHTML = "Enable";
+            } else {
+                button.innerHTML = "Disable";
+            }
+        }
+
     </script>
 </head>
 <body>
 
-    <br/>
-    <h4 class="alignCenter" style="font-family: Arial">What Is For Dinner Tonight?</h4>
 
-    <br/> <br/>
+    <h2  class="alignCenter" style="margin-bottom: 20px; margin-top: 20px; ">
+        What Is For Dinner Tonight?
+    </h2>
+
     <div class="alignCenter">
         <button id="start" class="select-button" onclick="startRandomSelection()" >Pick randomly</button>
     </div>
@@ -236,11 +357,22 @@
 
     <div class="grid-container">
         <div class="grid-item"  th:each="category : ${mealCategories}">
-            <div class="alignCenter" th:text="${category.categoryName}"></div><br/>
+            <button class="alignFloatRight disable-button" onclick="toggleDisable(this)">Disable</button>
+            <div class="alignCenter" th:text="${category.categoryName}"></div>
+
             <br/><br/>
             <ul class="list">
-                <li class="list-item" th:each="meal : ${category.mealOptions}">
-                    <div class="alignCenter" th:text="${meal.getMealName()}"></div>
+                <li class="list-item alignCenter"
+                    style="padding-top: 5px; padding-right: 5px"
+                    th:each="meal : ${category.mealOptions}">
+                    <div>
+                        <button class="alignFloatRight disable-button"
+                                onclick="toggleDisableListItem(this)"
+                                 >Disable</button>
+                        <div class="flexCenter"
+                             th:text="${meal.getMealName()}"
+                             ></div>
+                    </div>
                 </li>
             </ul>
             <button class="alignFloatRight hide-button" onclick="toggleList(this)">See Meals +</button>
@@ -248,7 +380,92 @@
     </div>
 
 
-    <div class="alignCenter">Don't see your favourite meal? <a href="/whatIsForDinner/suggestionsForm">See and add suggestions here</a> </div>
+
+    <div class="alignCenter" style="margin-bottom: 20px">
+        Don't see your favourite meal? <a href="/whatIsForDinner/suggestionsForm">See and add suggestions here</a>
+    </div>
+
+
+    <!-- Trigger/Open The Modal -->
+    <div class="flexCenter">
+        <div id="myBtn" class="hoverColor" style="padding: 5px; width: fit-content; border-radius: 25px">Have a Complaint or Request? Click here to send feedback.</div>
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content" style="background-color: #28CBFF">
+            <span class="close">&times;</span>
+            <h3>Email form</h3>
+            <form id="emailForm" action="" method="post" onsubmit="ajaxEmailSubmit(this); return false;">
+                <label>Your email: </label><input class="formVal" name="email" type="email" required>
+                <br/><br/>
+                <label>Subject: </label><input class="formVal" name="subject" type="text" required>
+                <br/><br/>
+                <label>email content:</label><br>
+                <textarea class="formVal" name="content" wrap="soft" rows="10" style="width: 95%;"  required></textarea>
+                <br/><br/><br/>
+
+                <input type="submit">
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
+
+        // Get the button that opens the modal
+        var btn = document.getElementById("myBtn");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+
+
+        function ajaxEmailSubmit(form)
+        {
+            var elements = form.getElementsByClassName("formVal");
+            var formData = new FormData();
+            for(var i=0; i<elements.length; i++)
+            {
+                formData.append(elements[i].name, elements[i].value);
+            }
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function()
+            {
+                if(xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                {
+                    alert(xmlHttp.responseText);
+                }
+            }
+            xmlHttp.open("post", "/emailPost");
+            xmlHttp.send(formData);
+
+            modal.style.display = "none";
+            form.reset();
+        }
+
+    </script>
 
 </body>
 </html>

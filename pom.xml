@@ -7,7 +7,7 @@
     <groupId>brettGoreham</groupId>
     <artifactId>webServer</artifactId>
     <packaging>pom</packaging>
-    <version>${revision}</version>
+    <version>1.1-SNAPSHOT</version>
     <modules>
         <module>database</module>
         <module>server</module>
@@ -15,7 +15,6 @@
     </modules>
 
     <properties>
-        <revision>1.1-DockerSNAPSHOT</revision>
         <java.version>11</java.version>
     </properties>
 
