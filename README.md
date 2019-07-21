@@ -1,7 +1,15 @@
+This project is powered by Spring Boot, Docker, and is running on AWS at goreham.no
+
+
 To start the program:
 first run docker-compose up
  (this brings up the database image.)
- 
+
+To migrate the database (currently very hacky)
+  change to database project. uncomment flyway maven plugin.
+  run mvn flyway:clean-migrate (or just migrate)
+
+
 Next in the server folder run 
   spring-boot:run -Dspring.profiles.active=dev 
 
