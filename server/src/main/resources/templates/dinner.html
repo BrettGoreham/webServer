@@ -9,6 +9,7 @@
         }
         div {
             font-family: Arial;
+            word-wrap: break-word;
         }
         h2 {
             font-family: Arial;
@@ -28,12 +29,6 @@
             margin: auto;
             text-align: center;
             vertical-align: middle;
-        }
-
-        .flexCenter {
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .alignFloatRight {
@@ -62,7 +57,7 @@
 
         .list-item{
             background-color: #00E1EF;
-            height: 25px;
+            min-height: 25px;
             border-radius: 25px;
             margin-bottom: 10px;
         }
@@ -104,6 +99,12 @@
             text-decoration: none;
             font-size: 10px;
             border-radius: 40px;
+        }
+
+
+        a {
+            color: black;
+            text-decoration: none;
         }
 
 
@@ -369,9 +370,12 @@
                         <button class="alignFloatRight disable-button"
                                 onclick="toggleDisableListItem(this)"
                                  >Disable</button>
-                        <div class="flexCenter"
-                             th:text="${meal.getMealName()}"
-                             ></div>
+                        <div class="alignCenter">
+                            <!--@{/order/{id}/details(id=3,action='show_all')}-->
+                            <a th:href="@{/whatIsForDinner/{category}/{meal}/info(category=${category.categoryName}, meal=${meal.getMealName()})}">
+                                <div th:text="${meal.getMealName()}"></div>
+                            </a>
+                        </div>
                     </div>
                 </li>
             </ul>
@@ -387,8 +391,8 @@
 
 
     <!-- Trigger/Open The Modal -->
-    <div class="flexCenter">
-        <div id="myBtn" class="hoverColor" style="padding: 5px; width: fit-content; border-radius: 25px">Have a Complaint or Request? Click here to send feedback.</div>
+    <div>
+        <div id="myBtn" class="hoverColor alignCenter" style="padding: 5px; width: fit-content; border-radius: 25px">Have a Complaint or Request? Click here to send feedback.</div>
     </div>
 
     <!-- The Modal -->

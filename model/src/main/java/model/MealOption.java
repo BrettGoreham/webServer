@@ -1,9 +1,14 @@
 package model;
 
+import java.util.List;
+
 public class MealOption {
     private int id;
     private String mealName;
     private StatusEnum status;
+    private String DescriptionOfMealOption;
+    private List<String> mainIngredients;
+    private List<MealOptionRecipe> mealOptionRecipes;
     private int fkMealCategory;
 
     public MealOption() {}
@@ -48,5 +53,29 @@ public class MealOption {
 
     public void setFkMealCategory(int fkMealCategory) {
         this.fkMealCategory = fkMealCategory;
+    }
+
+    public String getDescriptionOfMealOption() {
+        return DescriptionOfMealOption;
+    }
+
+    public void setDescriptionOfMealOption(String descriptionOfMealOption) {
+        DescriptionOfMealOption = descriptionOfMealOption;
+    }
+
+    public List<String> getMainIngredients() {
+        return mainIngredients;
+    }
+
+    public void setMainIngredients(List<String> mainIngredients) {
+        this.mainIngredients = mainIngredients;
+    }
+
+    public List<MealOptionRecipe> getMealOptionRecipes() {
+        return mealOptionRecipes;
+    }
+
+    public void setMealOptionRecipes(List<MealOptionRecipe> mealOptionRecipes) {
+        this.mealOptionRecipes = mealOptionRecipes;
     }
 }

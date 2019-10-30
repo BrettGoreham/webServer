@@ -6,9 +6,7 @@ import model.StatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.ArrayList;
@@ -28,6 +26,9 @@ public class WhatAmIHavingForDinnerServlet {
 
         List<MealCategory> meals = whatIsForDinnerService.getConfirmedMealCategories();
         Collections.shuffle(meals);
+        for(MealCategory mealCategory :  meals) {
+            Collections.shuffle(mealCategory.getMealOptions());
+        }
         model.addAttribute("mealCategories", meals);
         return "dinner";
     }
@@ -46,6 +47,18 @@ public class WhatAmIHavingForDinnerServlet {
 
         model.addAttribute("mealCategories", meals);
         return "suggestionsForm";
+    }
+
+    @GetMapping(path = "{mealcategory}/{mealName}/info")
+    public String mealOptionInfo(@PathVariable(value = "mealcategory") String mealCategory,
+                                 @PathVariable(value = "mealName") String mealName,
+                                 Model model) {
+
+        MealOption mealOption = whatIsForDinnerService.getMealOptionWithRecipesFromStrings(mealCategory, mealName);
+        model.addAttribute("mealCategory", mealCategory);
+        model.addAttribute("mealName", mealName);
+        model.addAttribute("mealOption", mealOption);
+        return "mealInfo";
     }
 
     @GetMapping("suggestionsForm/submit")

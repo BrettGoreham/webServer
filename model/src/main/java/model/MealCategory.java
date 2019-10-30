@@ -53,7 +53,7 @@ public class MealCategory {
 
     public List<MealOption> getMealOptions() {
         if(mealOptions == null) {
-            mealOptions = new ArrayList<MealOption>();
+            mealOptions = new ArrayList<>();
         }
         return mealOptions;
     }
@@ -61,4 +61,5 @@ public class MealCategory {
     public void setMealOptions(List<MealOption> mealOptions) {
         this.mealOptions = mealOptions;
     }
+
 }

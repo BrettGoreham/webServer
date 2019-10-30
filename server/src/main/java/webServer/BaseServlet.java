@@ -2,6 +2,7 @@
 package webServer;
 
 import database.DogDao;
+import database.MealDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import model.DogStat;

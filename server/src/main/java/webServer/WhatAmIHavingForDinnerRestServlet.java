@@ -1,13 +1,11 @@
 package webServer;
 
-import database.MealDao;
-import model.MealCategory;
-import model.MealOption;
-import model.StatusEnum;
+import database.DatabaseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/dinner")
@@ -17,56 +15,64 @@ public class WhatAmIHavingForDinnerRestServlet {
     private WhatIsForDinnerService whatIsForDinnerService;
 
 
-    @GetMapping("/getMealCategories")
-    public List<MealCategory> getMealCategories(@RequestParam(required = false, defaultValue = "false") boolean withMealOptions) {
-        return whatIsForDinnerService.getMealCategories(withMealOptions);
+    private static class SaveMealOptionRequest {
+        private int id;
+        private String description;
+        private String ingredients;
+
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getIngredients() {
+            return ingredients;
+        }
+
+        public void setIngredients(String ingredients) {
+            this.ingredients = ingredients;
+        }
     }
 
-    @GetMapping("/getMealCategories/confirmed")
-    public List<MealCategory> getConfirmedMealCategories() {
-        return whatIsForDinnerService.getConfirmedMealCategories();
-    }
+    @PostMapping("/saveMealOptionDetail")
+    public boolean saveMealOptionDetail(@RequestBody SaveMealOptionRequest saveMealOptionRequest){
 
-
-
-    @PostMapping("/addSuggestion")
-    public MealCategory categorySuggestionAddition(@RequestParam String categoryName) {
-        return whatIsForDinnerService.categorySuggestionAddition(
-            new MealCategory(categoryName, StatusEnum.SUGGESTED)
+        return whatIsForDinnerService.updateMealOptionInfo(
+                    saveMealOptionRequest.getId(),
+                    saveMealOptionRequest.getDescription(),
+                    DatabaseUtil.splitCommaDelimatedStringFromDatabase(saveMealOptionRequest.getIngredients())
         );
     }
 
-    @PostMapping("/addSuggestionWithMeals")
-    public MealCategory categorySuggestionAddition(@RequestParam String categoryName, @RequestBody List<String> mealNames) {
-        MealCategory mealCategory = new MealCategory(categoryName, StatusEnum.SUGGESTED);
+    /**
+     *
+     * This is used for both submitting new and updating old recipes.
+     *
+     * if recipeId is available it is an update. if not it is an insert.
+     */
+    @PostMapping("/recipeSubmit")
+    public int recipeSubmit(@RequestParam String mealOptionId, @RequestParam(required = false) String recipeId, @RequestParam String title, @RequestParam String ingredients, @RequestParam String instructions) {
+        Integer intMealOptionId = Integer.parseInt(mealOptionId);
+        Integer intRecipeId = recipeId == null ? null : Integer.parseInt(recipeId);
 
-        List<MealOption> options = mealCategory.getMealOptions();
-        for (String meal : mealNames) {
-            options.add(new MealOption(meal, StatusEnum.SUGGESTED));
-        }
-
-        return whatIsForDinnerService.categorySuggestionAddition(mealCategory);
-    }
-
-
-    public static class AcceptSuggestionsRequestWrapper {
-        private List<Integer> categoriesIds;
-        private List<Integer> optionsIds;
-
-        public List<Integer> getCategoriesIds() {return categoriesIds;}
-        public void setCategoriesIds(List<Integer> categoriesIds) {this.categoriesIds = categoriesIds;}
-        public List<Integer> getOptionsIds() {return optionsIds;}
-        public void setOptionsIds(List<Integer>  optionsIds) {this.optionsIds = optionsIds;}
-    }
-
-    @PostMapping("/acceptSuggestions")
-    public void acceptSuggestions(@RequestBody AcceptSuggestionsRequestWrapper AcceptSuggestionsRequestWrapper) {
-
-
-        whatIsForDinnerService.updateCategoriesAndOptionsToAStatus(
-            AcceptSuggestionsRequestWrapper.getCategoriesIds(),
-            AcceptSuggestionsRequestWrapper.getOptionsIds(),
-            StatusEnum.CONFIRMED
+        return whatIsForDinnerService.submitMealOptionRecipe(
+            intMealOptionId,
+            intRecipeId,
+            title,
+            ingredients,
+            instructions
         );
     }
 }

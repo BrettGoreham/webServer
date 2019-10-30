@@ -2,6 +2,7 @@ package database;
 
 import model.MealCategory;
 import model.MealOption;
+import model.MealOptionRecipe;
 import model.StatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -12,6 +13,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import javax.xml.crypto.Data;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
+
 public class MealDao {
 
     @Autowired
@@ -43,10 +46,24 @@ public class MealDao {
             .append("WHERE category.status = 'CONFIRMED' AND options.status = 'CONFIRMED' ")
             .append("ORDER BY id;").toString();
 
+    private final static String getMealOptionInfoByCategoryAndOptionName =
+        new StringBuilder()
+            .append("SELECT options.id as id, options.description as description, options.main_ingredients as main_ingredients, category.id as category_id, ")
+            .append("recipes.id as recipe_id, recipes.title as recipe_title, recipes.ingredients as recipe_ingredients, recipes.instructions as recipe_instructions ")
+            .append("FROM MEAL_CATEGORIES category ")
+            .append("INNER JOIN MEAL_OPTIONS options ON category.id = options.fk_meal_category ")
+            .append("LEFT JOIN MEAL_OPTION_RECIPES recipes ON options.id = recipes.fk_meal_option ")
+            .append("WHERE category.category_name = ? AND options.meal_name = ?").toString();
+
+
+
     private final static String insertMealCategoryWithNoMealOptions = "INSERT INTO MEAL_CATEGORIES ( category_name, status) VALUES (?,?)";
 
     private final static String insertMealOptionsForMealCategory = "INSERT INTO MEAL_OPTIONS (fk_meal_category, meal_name, status) VALUES (?, ?, ?)";
 
+    private final static String insertNewMealOptionRecipe = "INSERT INTO MEAL_OPTION_RECIPES (fk_meal_option, title, ingredients, instructions) VALUES (?, ?, ?, ?)";
+
+    private final static String updateMealOptionRecipe = "UPDATE MEAL_OPTION_RECIPES SET title = ?, ingredients = ?, instructions = ? WHERE id = ?";
 
     private final static String updateCategoriesStatus = "UPDATE MEAL_CATEGORIES SET status = :statval WHERE id IN (:ids);";
 
@@ -56,6 +73,7 @@ public class MealDao {
 
     private final static String getCountOfSuggestedOptions = "SELECT meal_name FROM MEAL_OPTIONS WHERE status = 'SUGGESTED'";
 
+    private final static String updateOptionDescriptionAndIngredients = "UPDATE MEAL_OPTIONS SET description = :description, main_ingredients = :ingredients WHERE id = :id;";
 
     public List<MealCategory> getAllMealCategories(){
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(getMealCategories);
@@ -77,7 +95,6 @@ public class MealDao {
     public List<MealCategory> getAllMealCategoriesWithMealOptions(){
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(getMealCategoriesWithMealOptions);
-
 
 
         return mapMealCategoriesWithMealOptions(rows);
@@ -217,5 +234,81 @@ public class MealDao {
     public List<String> getSuggestedMealOptionsExist() {
 
         return jdbcTemplate.queryForList(getCountOfSuggestedOptions, String.class);
+    }
+
+    public MealOption getMealOptionWithRecipesFromStrings(String mealCategory, String mealName) {
+
+        List<Map<String,Object>> resultSet = jdbcTemplate.queryForList(getMealOptionInfoByCategoryAndOptionName, mealCategory, mealName);
+
+        MealOption mealOption = null;
+        List<MealOptionRecipe> mealOptionRecipes = new ArrayList<>();
+        for( Map<String,Object> resultMap : resultSet) {
+
+            if (mealOption == null) {
+                mealOption = new MealOption();
+                mealOption.setId((int) resultMap.get("id"));
+                mealOption.setDescriptionOfMealOption((String) resultMap.get("description"));
+                mealOption.setMainIngredients(DatabaseUtil.splitCommaDelimatedStringFromDatabase((String) resultMap.get("main_ingredients")));
+                mealOption.setFkMealCategory((int) resultMap.get("category_id"));
+
+                mealOption.setMealName(mealName);
+            }
+
+            Integer recipeid = (Integer) resultMap.get("recipe_id");
+            if (recipeid != null) {
+                MealOptionRecipe recipe = new MealOptionRecipe();
+
+                recipe.setId(recipeid);
+                recipe.setTitle((String) resultMap.get("recipe_title"));
+                recipe.setIngredients((String) resultMap.get("recipe_ingredients"));
+                recipe.setInstructions((String) resultMap.get("recipe_instructions"));
+
+                mealOptionRecipes.add(recipe);
+            }
+        }
+
+        mealOption.setMealOptionRecipes(mealOptionRecipes);
+        return mealOption;
+    }
+
+
+    public void updateOptionsDescriptionsAndIngredients(int id, String description, List<String> ingredients) {
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("id", id);
+        parameters.addValue("description", description);
+        parameters.addValue("ingredients", DatabaseUtil.createCommaDelimatedStringForDatabase(ingredients));
+
+
+        namedParameterJdbcTemplate.update(updateOptionDescriptionAndIngredients, parameters);
+    }
+
+
+    /** this returns the id of the added recipe.*/
+    public int addRecipeToMealOption(int mealOptionId, String title, String ingredients, String instructions ) {
+
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                .prepareStatement(insertNewMealOptionRecipe, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, mealOptionId);
+            ps.setString(2, title);
+            ps.setString(3, ingredients);
+            ps.setString(4, instructions);
+            return ps;
+        }, keyHolder);
+
+        return keyHolder.getKey().intValue();
+    }
+
+    public int updateRecipe(int recipeId, String title, String ingredients, String instructions) {
+
+
+        jdbcTemplate.update(updateMealOptionRecipe, title, ingredients, instructions, recipeId);
+
+        return recipeId;
     }
 }

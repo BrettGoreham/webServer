@@ -1,0 +1,372 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: #28CBFF;
+            margin: auto;
+            text-align: center;
+        }
+
+        div {
+            background-color: #28CBFF;
+            margin: auto;
+            text-align: center;
+        }
+
+        .alignCenter {
+            margin: auto;
+            text-align: center;
+        }
+
+        .list {
+            list-style-type: none;
+        }
+
+        .listItem {
+            margin-bottom: 5px;
+        }
+
+        .recipe{
+            margin-top: 20px;
+            padding: 10px;
+            border-style: double;
+            border-radius: 20px;
+        }
+
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+    </style>
+
+    <script type="text/javascript" th:src="@{/js/baseJs.js}"></script>
+    <script>
+        function deleteOption(button) {
+            var divButtonBelongsTo = button.parentNode;
+            var listItemDivBelongsTo = divButtonBelongsTo.parentNode;
+            listItemDivBelongsTo.remove();
+        }
+
+
+        var listItem =
+            "<div>\n" +
+                "<input class=\"alignCenter ingredText\"/>\n" +
+                "<button type=\"button\" onclick=\"deleteOption(this)\">delete above</button>\n" +
+            "</div>";
+
+        function addOption() {
+            var div = document.createElement("li");
+            div.classList.toggle("listItem");
+            div.innerHTML = listItem;
+
+            document.getElementById("ingredients").appendChild(div);
+
+        }
+
+        function save(button){
+
+            button.disabled = true;
+
+            var idLabel = document.getElementById("mealOptionId");
+            var id = idLabel.innerHTML;
+
+            var description = document.getElementById("dec").value;
+
+            var ingredientsList = document.getElementsByClassName("ingredText");
+            var ingredString = "";
+            for (var i = 0; i < ingredientsList.length; i++) {
+                var ingredient = ingredientsList[i].value;
+                if (ingredient != null) {
+                    ingredient = ingredient.replace(/,/g, '');
+                    if (ingredient.length > 0) {
+                        ingredString += ingredient + ",";
+                    }
+                }
+            }
+
+            ingredString.substr(0, ingredString.length - 2); //get rid of last comma because im dumb
+
+
+            var xhr =  new XMLHttpRequest();
+            xhr.open('POST', '/dinner/saveMealOptionDetail');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert("option saved");
+                    button.disabled = false;
+                }
+                else {
+                    alert("failed to save option try again");
+                    button.disabled = false;
+                }
+            };
+
+            xhr.send(JSON.stringify({
+                id: id,
+                description: description,
+                ingredients: ingredString
+            }));
+        }
+
+    </script>
+
+    <title>Meal Info</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body >
+<h1 class="alignCenter" th:text="${mealCategory} + ' - ' + ${mealName} + ' Info'" style="margin-top: 15px"></h1>
+<div style="display: grid; grid-template-columns: 50% 50%; margin-top: 30px">
+    <div class="alignCenter">
+        <h3>General Characteristics</h3>
+        <form>
+            <label id="mealOptionId" style="visibility: hidden" th:text="${mealOption.id}"></label>
+            <div style="display: grid; grid-template-columns: 50% 50%; margin-top: 30px">
+                <div>Description</div>
+                <div>
+                    <textarea id="dec"
+                              class="alignCenter"
+                              name="content"
+                              wrap="soft"
+                              style="min-height: 60px;"
+                              th:text="${mealOption.descriptionOfMealOption}" >
+
+                    </textarea>
+                </div>
+            </div>
+
+
+            <div style="display: grid; grid-template-columns: 50% 50%; margin-top: 30px">
+                <div>Main Ingredients</div>
+                <div>
+                    <ul class="list" id="ingredients">
+                        <li class="listItem " th:each="ingredient : ${mealOption.mainIngredients}">
+                            <div>
+                                <input class="alignCenter ingredText" th:value="${ingredient}" type="text"/>
+                                <button type="button" onclick="deleteOption(this)">delete above</button>
+                            </div>
+
+                        </li>
+                    </ul>
+                    <button type="button" onclick="addOption()" style="margin-top: 50px;">add option</button>
+                </div>
+            </div>
+
+            <button type="button" onclick="save(this)">save</button>
+        </form>
+    </div>
+
+    <div id="recipeList" class="alignCenter">
+        <h3>Recipes</h3>
+        <button id="addRecipe">Add new Recipe</button>
+
+        <div class="recipe" th:each="recipe : ${mealOption.mealOptionRecipes}" >
+            <div th:text="${recipe.id}" style="visibility: hidden"></div>
+            <label th:text="${recipe.title}" style="font-size: 20px"></label>
+            <div th:utext="${recipe.ingredients}" style="margin-top: 10px; white-space: pre;"></div>
+            <div th:utext="${recipe.instructions}" style="margin-top: 10px; white-space: pre;"></div>
+            <button onclick="editRecipe(this)" style="margin-top: 10px; margin-bottom: 5px;">Edit Recipe</button>
+        </div>
+    </div>
+
+    <!-- addRecipePopup -->
+    <div id="addRecipePopup" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content" style="background-color: #28CBFF">
+            <span class="close">&times;</span>
+            <div class="alignCenter">
+                <h3>Add A Recipe</h3>
+                <form id="emailForm" action="" method="post" onsubmit="ajaxRecipeSubmit(this); return false;">
+                    <div id="formId" style="visibility: hidden"></div>
+                    <label>Recipe Title </label>
+                    <br>
+                    <input id="formTitle" style="width: 95%;" name="title" type="text" required>
+                    <br/><br/>
+                    <label>Ingredients</label>
+                    <br>
+                    <textarea id="formIngredients" name="ingredients" wrap="soft" rows="7" style="width: 95%;"  required></textarea>
+                    <br/><br/>
+                    <label>Instructions</label>
+                    <br>
+                    <textarea id="formInstructions" name="instructions" wrap="soft" rows="7" style="width: 95%;"  required></textarea>
+                    <br/><br/><br/>
+
+                    <input type="submit">
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+</body>
+<script>
+
+    var mealOptionId = document.getElementById("mealOptionId").textContent;
+
+    var modal = document.getElementById("addRecipePopup");
+    var btn = document.getElementById("addRecipe");
+    var span = document.getElementsByClassName("close")[0];
+
+
+    var formId = document.getElementById("formId");
+    var formTitle = document.getElementById("formTitle");
+    var formIngredients = document.getElementById("formIngredients");
+    var formInstructions = document.getElementById("formInstructions");
+
+
+    //editing a recipe
+    function editRecipe(button) {
+        var recipe = button.parentNode;
+
+        //Need to fill in existing info into the fields.
+        formId.textContent = recipe.children[0].textContent;
+        formTitle.value = recipe.children[1].textContent;
+        formIngredients.textContent = recipe.children[2].textContent;
+        formInstructions.textContent = recipe.children[3].textContent;
+
+        modal.style.display = "block";
+    }
+
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    span.onclick = function() {
+        makeRecipeModalHiddenAndResetValues();
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            makeRecipeModalHiddenAndResetValues();
+        }
+    }
+
+    function makeRecipeModalHiddenAndResetValues() {
+        modal.style.display = "none";
+
+        formId.textContent = "";
+        formTitle.value = "";
+        formIngredients.textContent = "";
+        formInstructions.textContent ="";
+    }
+
+    function ajaxRecipeSubmit(form)
+    {
+        var titleText = formTitle.value;
+        var ingredientsText = formIngredients.value;
+        var instructionsText = formInstructions.value;
+
+        var formData = new FormData();
+
+        formData.append("mealOptionId", mealOptionId);
+
+        var formIdText = formId.textContent;
+        if (formIdText != "") {
+            formData.append("recipeId", formIdText);
+        }
+
+        formData.append("title", titleText);
+        formData.append("ingredients", ingredientsText);
+        formData.append("instructions", instructionsText);
+
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function()
+        {
+            if(xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                if(formIdText == ""){
+                    addNewMealToList(
+                        xmlHttp.responseText,
+                        titleText,
+                        ingredientsText,
+                        instructionsText
+                    );
+                }
+                else {
+                    findMealAndReplaceWithNewValues(
+                        formIdText,
+                        titleText,
+                        ingredientsText,
+                        instructionsText
+                    )
+                }
+                alert(xmlHttp.responseText);
+            }
+        }
+        xmlHttp.open("post", "/dinner/recipeSubmit");
+        xmlHttp.send(formData);
+
+        modal.style.display = "none";
+        form.reset();
+    }
+
+    var recipeList = document.getElementById("recipeList")
+
+    function findMealAndReplaceWithNewValues(id, title, ingredients, instructions) {
+        var recipes = document.getElementsByClassName("recipe");
+
+        for (var i = 0; i < recipes.length; i++){
+            if(recipes[i].children[0].textContent == id) {
+                recipes[i].children[1].textContent = title;
+                recipes[i].children[2].innerHTML = ingredients;
+                recipes[i].children[3].innerHTML = instructions;
+                break;
+            }
+        }
+    }
+
+    function addNewMealToList(id, title, ingredients, instructions) {
+        var div = document.createElement("div");
+        div.classList.toggle("recipe");
+
+        div.innerHTML = "<label style=\"visibility: hidden\">" + id + "</label>\n" +
+            "<label style=\"font-size: 20px\">"    + title + "</label>\n" +
+            "<div style=\"margin-top: 10px; white-space: pre;\">"     + ingredients + "</div>\n" +
+            "<div style=\"margin-top: 10px; white-space: pre;\">"     + instructions + "</div>\n" +
+            "<button onclick=\"editRecipe(this)\">Edit Recipe</button>";
+
+
+        recipeList.appendChild(div);
+    }
+
+</script>
