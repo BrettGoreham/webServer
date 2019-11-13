@@ -21,19 +21,30 @@ public class BaseServlet {
     @Autowired
     private ScheduledEmails scheduledEmails;
 
+    @Autowired
+    private RecaptchaValidationService recaptchaValidationService;
+
     @RequestMapping("/")
     public RedirectView index() {
         return new RedirectView("/whatIsForDinner");
     }
 
     @PostMapping("/emailPost")
-    public String  emailPost(@RequestParam String email, @RequestParam String subject, @RequestParam String content) {
-        StringBuilder subjectBuilder = new StringBuilder();
+    public String  emailPost(@RequestParam String recaptchaCode, @RequestParam String email, @RequestParam String subject, @RequestParam String content) {
+        Boolean isRecaptchaValid = recaptchaValidationService.checkRecaptchaString(recaptchaCode);
 
-        subjectBuilder.append(subject).append("  from: ").append(email);
+        if (isRecaptchaValid) {
 
-        scheduledEmails.sendEmailToBrett(subjectBuilder.toString(), content);
-        return "Email recieved :D";
+            StringBuilder subjectBuilder = new StringBuilder();
+
+            subjectBuilder.append(subject).append("  from: ").append(email);
+
+            scheduledEmails.sendEmailToBrett(subjectBuilder.toString(), content);
+            return "Email recieved :D";
+        }
+        else {
+            return "Recaptcha Validation Failed :(, Email failed to send";
+        }
     }
 
     @GetMapping("/dogStats")

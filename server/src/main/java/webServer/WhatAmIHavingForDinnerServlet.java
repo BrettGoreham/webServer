@@ -20,6 +20,8 @@ public class WhatAmIHavingForDinnerServlet {
 
     @Autowired
     private WhatIsForDinnerService whatIsForDinnerService;
+    @Autowired
+    private RecaptchaValidationService recaptchaValidationService;
 
     @GetMapping("")
     public String index(Model model) {
@@ -62,30 +64,37 @@ public class WhatAmIHavingForDinnerServlet {
     }
 
     @GetMapping("suggestionsForm/submit")
-    public RedirectView  submit(@RequestParam String categoryName, @RequestParam(required = false, value="mealOptions") String[] mealOptions) {
-        List<MealCategory> a =  whatIsForDinnerService.getMealCategories(true);
+    public RedirectView  submit(@RequestParam String recaptchaCode, @RequestParam String categoryName, @RequestParam(required = false, value="mealOptions") String[] mealOptions) {
 
-        MealCategory mealCategory = null;
-        for (int i = 0; i < a.size(); i ++) {
-            if (categoryName.equalsIgnoreCase(a.get(i).getCategoryName())) {
-                mealCategory = a.get(i);
+        boolean isCaptchaCorrect =  recaptchaValidationService.checkRecaptchaString(recaptchaCode);
+        if(isCaptchaCorrect) {
+            List<MealCategory> a = whatIsForDinnerService.getMealCategories(true);
+
+            MealCategory mealCategory = null;
+            for (int i = 0; i < a.size(); i++) {
+                if (categoryName.equalsIgnoreCase(a.get(i).getCategoryName())) {
+                    mealCategory = a.get(i);
+                }
             }
-        }
 
-        if (mealCategory == null) {
-            mealCategory = new MealCategory(categoryName, StatusEnum.SUGGESTED);
-        }
-
-        List<MealOption> suggestions = new ArrayList<>();
-        if (mealOptions != null) {
-            for (String meal : mealOptions) {
-                suggestions.add(new MealOption(meal, StatusEnum.SUGGESTED));
+            if (mealCategory == null) {
+                mealCategory = new MealCategory(categoryName, StatusEnum.SUGGESTED);
             }
+
+            List<MealOption> suggestions = new ArrayList<>();
+            if (mealOptions != null) {
+                for (String meal : mealOptions) {
+                    suggestions.add(new MealOption(meal, StatusEnum.SUGGESTED));
+                }
+            }
+
+            mealCategory.setMealOptions(suggestions);
+
+            whatIsForDinnerService.categorySuggestionAddition(mealCategory);
         }
-
-        mealCategory.setMealOptions(suggestions);
-
-        whatIsForDinnerService.categorySuggestionAddition(mealCategory);
+        else {
+            throw new RuntimeException("Captcha Failed to validate.");
+        }
 
         return new RedirectView("/whatIsForDinner/suggestionsForm");
     }

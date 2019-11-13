@@ -157,6 +157,7 @@
     <title>What Is For Dinner Tonight</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script type="text/javascript" th:src="@{/js/baseJs.js}"></script>
     <script>
 
@@ -351,6 +352,8 @@
         What Is For Dinner Tonight?
     </h2>
 
+
+
     <div class="alignCenter">
         <button id="start" class="select-button" onclick="startRandomSelection()" >Pick randomly</button>
     </div>
@@ -411,10 +414,17 @@
                 <textarea class="formVal" name="content" wrap="soft" rows="10" style="width: 95%;"  required></textarea>
                 <br/><br/><br/>
 
-                <input type="submit">
+                <div><div class="g-recaptcha"
+                     data-callback="captchaCallBack"
+                     data-expired-callback="captchaExpiredCallBack"
+                     data-error-callback="captchaErrorCallBack"
+                     data-theme="dark"
+                     th:attr="data-sitekey=${@environment.getProperty('recaptcha.site.key')}"
+                     style="display: inline-block;"/></div>
+                <br/><br/>
+                <input id="submitButton" type="submit" disabled>
             </form>
         </div>
-
     </div>
 
     <script>
@@ -445,11 +455,42 @@
         }
 
 
+        function getButtonIfNull(){
+            if(submitButton == null) {
+                submitButton = document.getElementById("submitButton");
+            }
+        }
+        function enableButton() {
+            getButtonIfNull();
+            submitButton.disabled = false;
+        }
+        function disableButton() {
+            getButtonIfNull();
+            submitButton.disabled = true;
+        }
+
+        var captchaStringText = "";
+        function captchaCallBack(value) {
+            enableButton();
+            captchaStringText = value;
+        }
+
+        function captchaExpiredCallBack(){
+            disableButton();
+            captchaStringText = "";
+        }
+
+        function captchaErrorCallBack(){
+            disableButton();
+            captchaStringText = "";
+        }
 
         function ajaxEmailSubmit(form)
         {
             var elements = form.getElementsByClassName("formVal");
             var formData = new FormData();
+
+            formData.append("recaptchaCode", captchaStringText);
             for(var i=0; i<elements.length; i++)
             {
                 formData.append(elements[i].name, elements[i].value);

@@ -31,6 +31,10 @@
             border-radius: 25px;
         }
 
+        .g-recaptcha {
+            display: inline-block;
+        }
+
         .alignCenter {
             margin: auto;
             text-align: center;
@@ -46,6 +50,7 @@
 
 
     <script type="text/javascript" th:src="@{/js/baseJs.js}"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
 
         var lastChosenList = null;
@@ -88,8 +93,38 @@
         }
 
 
+        var captchaStringText = "";
+        var submitButton;
+
+        function getButtonIfNull(){
+            if(submitButton == null) {
+                submitButton = document.getElementById("submitButton");
+            }
+        }
+        function enableButton() {
+            getButtonIfNull();
+            submitButton.disabled = false;
+        }
+        function disableButton() {
+            getButtonIfNull();
+            submitButton.disabled = true;
+        }
+        function captchaCallBack(value) {
+            enableButton();
+            captchaStringText = value;
+        }
+
+        function captchaExpiredCallBack(){
+            disableButton();
+            captchaStringText = "";
+        }
+
+        function captchaErrorCallBack(){
+            disableButton();
+            captchaStringText = "";
+        }
+
         function handleClick() {
-            console.log("submitted");
 
             var e = document.getElementById("categories");
             var strCategory = e.options[e.selectedIndex].value;
@@ -108,21 +143,27 @@
 
         function formulateAndSubmitRequest(categoryStr) {
             var beginningStr = "/whatIsForDinner/suggestionsForm/submit";
-            var parametersIndicator= "?"
+            var parametersIndicator= "?";
+            var captcha = "recaptchaCode=" + captchaStringText;
             var categoryName = "categoryName=" + categoryStr;
-            var and= "&"
+            var and= "&";
 
             var options = document.getElementsByClassName("option-choice");
 
             var mealOptions = "";
-            var mealOptionsparamStart = "mealOptions="
+            var mealOptionsparamStart = "mealOptions=";
             for (i = 0; i < options.length; i++) {
                 if(options[i].value != "") {
                     mealOptions = mealOptions + and + mealOptionsparamStart + options[i].value;
                 }
             }
 
-            window.location.href = beginningStr + parametersIndicator + categoryName + mealOptions;
+            window.location.href = beginningStr
+                + parametersIndicator
+                + captcha
+                + and
+                + categoryName
+                + mealOptions;
 
         }
     </script>
@@ -177,7 +218,16 @@
             <button type="button" onclick="addNewMealOption()">add another</button>
 
             <br/><br/>
-            <button type="button" onclick="handleClick()">Submit Suggestions</button>
+            <div class="g-recaptcha"
+                 data-callback="captchaCallBack"
+                 data-expired-callback="captchaExpiredCallBack"
+                 data-error-callback="captchaErrorCallBack"
+                 data-theme="dark"
+                 th:attr="data-sitekey=${@environment.getProperty('recaptcha.site.key')}">
+
+            </div>
+            <br/><br>
+            <button id="submitButton" type="button" onclick="handleClick()" disabled>Submit Suggestions</button>
 
         </div>
     </form>

@@ -4,8 +4,6 @@ import database.DatabaseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 
 @RestController
 @RequestMapping("/dinner")
@@ -14,6 +12,8 @@ public class WhatAmIHavingForDinnerRestServlet {
     @Autowired
     private WhatIsForDinnerService whatIsForDinnerService;
 
+    @Autowired
+    private RecaptchaValidationService recaptchaValidationService;
 
     private static class SaveMealOptionRequest {
         private int id;
@@ -63,16 +63,24 @@ public class WhatAmIHavingForDinnerRestServlet {
      * if recipeId is available it is an update. if not it is an insert.
      */
     @PostMapping("/recipeSubmit")
-    public int recipeSubmit(@RequestParam String mealOptionId, @RequestParam(required = false) String recipeId, @RequestParam String title, @RequestParam String ingredients, @RequestParam String instructions) {
-        Integer intMealOptionId = Integer.parseInt(mealOptionId);
-        Integer intRecipeId = recipeId == null ? null : Integer.parseInt(recipeId);
+    public int recipeSubmit(@RequestParam String recaptchaCode, @RequestParam String mealOptionId, @RequestParam(required = false) String recipeId, @RequestParam String title, @RequestParam String ingredients, @RequestParam String instructions) {
 
-        return whatIsForDinnerService.submitMealOptionRecipe(
-            intMealOptionId,
-            intRecipeId,
-            title,
-            ingredients,
-            instructions
-        );
+        boolean isRecaptchaValid = recaptchaValidationService.checkRecaptchaString(recaptchaCode);
+        if (isRecaptchaValid) {
+            Integer intMealOptionId = Integer.parseInt(mealOptionId);
+            Integer intRecipeId = recipeId == null ? null : Integer.parseInt(recipeId);
+
+            return whatIsForDinnerService.submitMealOptionRecipe(
+                intMealOptionId,
+                intRecipeId,
+                title,
+                ingredients,
+                instructions
+            );
+        }
+        else {
+            return -1;
+        }
+
     }
 }
