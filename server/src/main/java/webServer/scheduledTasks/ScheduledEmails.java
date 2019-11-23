@@ -68,13 +68,13 @@ public class ScheduledEmails {
 
             }
 
-            sendEmailToBrett("Nightly Suggestion Check " + date, stringBuilder.toString());
+            sendEmailToToEmailAddr("Nightly Suggestion Check " + date, stringBuilder.toString());
 
         }
 
     }
 
-    public void sendEmailToBrett(String subject, String content) {
+    public void sendEmailToToEmailAddr(String subject, String content) {
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmailAddr);
@@ -83,7 +83,6 @@ public class ScheduledEmails {
         message.setText(content);
         try {
             emailSender.send(message);
-            System.out.println("Sent email.");
         }
         catch (Exception e) {
             System.out.println(e);

@@ -39,7 +39,7 @@ public class BaseServlet {
 
             subjectBuilder.append(subject).append("  from: ").append(email);
 
-            scheduledEmails.sendEmailToBrett(subjectBuilder.toString(), content);
+            scheduledEmails.sendEmailToToEmailAddr(subjectBuilder.toString(), content);
             return "Email recieved :D";
         }
         else {
