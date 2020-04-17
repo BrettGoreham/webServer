@@ -162,18 +162,15 @@
     <script>
 
         function startRandomSelection() {
-            document.getElementById("start").disabled = true;
-            document.getElementById("start").innerHTML = "Finding dinner..."
+
+            disableStartButton();
             reset();
 
-            var allDisabledMealCateogries = document.querySelectorAll( '.grid-item:not(.disabled)' );
+            var allDisabledMealCategories = getAllEnabledCategoriesWithAtLeastOneEnabledOption();
+            if (allDisabledMealCategories.length > 0) {
+                var numberOfRandomSelects = Math.floor(allDisabledMealCategories.length * 3);
 
-            allDisabledMealCateogries = filterCategoriesWithNoOptions(allDisabledMealCateogries);
-
-            if (allDisabledMealCateogries.length > 0) {
-                var numberOfRandomSelects = Math.floor(allDisabledMealCateogries.length * 3);
-
-                setTimeoutForSelectedIndex(numberOfRandomSelects, allDisabledMealCateogries, -1)
+                setTimeoutForSelectedIndex(numberOfRandomSelects, allDisabledMealCategories, -1)
             }
             else {
                 alert("No enabled categories with enabled meal options available :(");
@@ -183,6 +180,11 @@
 
         }
 
+        function getAllEnabledCategoriesWithAtLeastOneEnabledOption() {
+            var allDisabledMealCateogries = document.querySelectorAll( '.grid-item:not(.disabled)' );
+            return filterCategoriesWithNoOptions(allDisabledMealCateogries);
+        }
+
         function filterCategoriesWithNoOptions(listOfGridItems) {
             var filtered = [];
             for (var i = 0; i < listOfGridItems.length; i++) {
@@ -190,9 +192,7 @@
                     filtered.push(listOfGridItems[i]);
                 }
             }
-
             return filtered;
-
         }
 
         function reset() {
@@ -202,7 +202,7 @@
             }
 
             var allMealOptions = document.querySelectorAll( '.list-item:not(.disabled)' );
-            for (var i = 0; i < allMealOptions.length; i++) {
+            for (i = 0; i < allMealOptions.length; i++) {
                 makeElementUnselected(allMealOptions[i], "#00E1EF");
             }
         }
@@ -238,7 +238,7 @@
         }
 
         function finishMealCategory(element) {
-            makeElementSelected(element, '#3DF1C6')
+            makeElementSelected(element, '#3DF1C6');
 
             var list = element.getElementsByClassName("list")[0];
             list.style.display = "block";
@@ -288,6 +288,91 @@
         function finishMealOption(finalChosenMeal) {
             finalChosenMeal.style.backgroundColor = "#A2F995";
             enableStartButton();
+        }
+
+
+        /** meal planning for x days**/
+        function startXDaysStart(mealsToPlan) {
+            var mode = document.querySelector('input[name="mode"]:checked').value;
+
+            var mealsPlanned;
+            if (mode === 'optionEqual') {
+                mealsPlanned = getChoicesForOptionsEqual(mealsToPlan);
+            }
+            else {
+                mealsPlanned = getChoicesForCategoriesEquals(mealsToPlan);
+            }
+
+            for(var i = 0; i < mealsPlanned.length; i++) {
+                var mealDivToBeAdded = mealsPlanned[i].children[0].cloneNode(true);
+                mealDivToBeAdded.removeChild(mealDivToBeAdded.firstChild);
+                mealDivToBeAdded.removeChild(mealDivToBeAdded.firstChild);// this is too remove the disable button. inspect later why it takes two remove first children.
+
+                var respinButton = document.createElement("button");
+                respinButton.innerHTML = "Re-spin";
+                respinButton.classList.add("alignCenter");
+                respinButton.style.width = "fit-content";
+                respinButton.style.height = "fit-content";
+                respinButton.onclick = function() { respinOption(this); };
+
+                mealDivToBeAdded.appendChild(respinButton);
+
+                mealDivToBeAdded.style = "display: grid; grid-template-columns: 80% 20%; height:40px; margin-bottom: 15px; border: 1px solid rgba(0, 0, 0, 0.8);";
+                mealPlanningMeals.appendChild(mealDivToBeAdded);
+            }
+
+            displayMealPlanningModal();
+        }
+
+        /**
+         * this method is used to replace a meal option in the meal planning popup.
+         *
+         * find a new option randomly. and replace the text part of the div.
+         * @param buttonOnOption
+         */
+        function respinOption(buttonOnOption) {
+            var newOption = getChoicesForOptionsEqual(1)[0].firstElementChild.children[1];
+            var oldOption = buttonOnOption.parentElement.firstElementChild;
+
+            //clone node required to not remove it from the main screen.
+            oldOption.parentElement.replaceChild(newOption.cloneNode(true), oldOption);
+
+        }
+
+        function getChoicesForOptionsEqual(numChoices) {
+            var mealOptions = document.querySelectorAll(".list-item:not(.disabled)");
+
+            var chosenMealOptions = [];
+            for (var i = 0; i < numChoices; i++) {
+                var randomIndex = Math.floor(Math.random() * mealOptions.length);
+                chosenMealOptions.push(mealOptions[randomIndex]);
+            }
+
+            return chosenMealOptions;
+        }
+
+        var test;
+        function getChoicesForCategoriesEquals(numChoices) {
+            var categories = getAllEnabledCategoriesWithAtLeastOneEnabledOption();
+            test = categories;
+
+            var chosenMealOptions = [];
+            for (var i = 0; i < numChoices; i++) {
+                var randomIndex = Math.floor(Math.random() * categories.length);
+
+                var categoryChosen = categories[randomIndex];
+                var optionsInCategory = categoryChosen.querySelectorAll(".list-item:not(.disabled)");
+
+                var randomOptionIndex = Math.floor(Math.random() * optionsInCategory.length);
+                chosenMealOptions.push(optionsInCategory[randomOptionIndex]);
+            }
+
+            return chosenMealOptions;
+        }
+
+        function disableStartButton() {
+            document.getElementById("start").disabled = true;
+            document.getElementById("start").innerHTML = "Finding dinner..."
         }
 
         function enableStartButton() {
@@ -346,7 +431,14 @@
     </script>
 </head>
 <body>
+    <div class="modal" id="mealPlanningModal">
+        <div class="modal-content" style="background-color: #28CBFF">
+            <span id="close2">&times;</span>
+            <div id="mealPlanningMeals">
 
+            </div>
+        </div>
+    </div>
 
     <h2  class="alignCenter" style="margin-bottom: 20px; margin-top: 20px; ">
         What Is For Dinner Tonight?
@@ -354,10 +446,34 @@
 
 
 
-    <div class="alignCenter">
-        <button id="start" class="select-button" onclick="startRandomSelection()" >Pick randomly</button>
+
+    <div class="alignCenter" style="display: grid;
+            grid-template-columns: 33.33% 33.33% 33.33%;
+            padding: 10px;">
+
+        <div class="alignCenter">
+            <button style="width: fit-content;" id="start" class="select-button" onclick="startRandomSelection()" >Pick randomly</button>
+        </div>
+
+        <div>
+            <h4>Selection Mode</h4>
+            <label>
+                <input type="radio" name="mode" value="optionEqual" checked>
+            </label> All options have equal probability<br>
+            <label>
+                <input type="radio" name="mode" value="categoryEqual">
+            </label> All categories have equal probability<br>
+        </div>
+
+        <div class="alignCenter">
+        <button style="width: fit-content;" id="StartXDaysStart" class="select-button" onclick="startXDaysStart(7)">Meal Plan For Week!</button>
+        </div>
     </div>
 
+    <div class="alignCenter">
+
+
+    </div>
 
     <div class="grid-container">
         <div class="grid-item"  th:each="category : ${mealCategories}">
@@ -374,7 +490,6 @@
                                 onclick="toggleDisableListItem(this)"
                                  >Disable</button>
                         <div class="alignCenter">
-                            <!--@{/order/{id}/details(id=3,action='show_all')}-->
                             <a th:href="@{/whatIsForDinner/{category}/{meal}/info(category=${category.categoryName}, meal=${meal.getMealName()})}">
                                 <div th:text="${meal.getMealName()}"></div>
                             </a>
@@ -414,13 +529,15 @@
                 <textarea class="formVal" name="content" wrap="soft" rows="10" style="width: 95%;"  required></textarea>
                 <br/><br/><br/>
 
-                <div><div class="g-recaptcha"
+                <div>
+                    <div class="g-recaptcha"
                      data-callback="captchaCallBack"
                      data-expired-callback="captchaExpiredCallBack"
                      data-error-callback="captchaErrorCallBack"
                      data-theme="dark"
                      th:attr="data-sitekey=${@environment.getProperty('recaptcha.site.key')}"
-                     style="display: inline-block;"/></div>
+                     style="display: inline-block;"/>
+                </div>
                 <br/><br/>
                 <input id="submitButton" type="submit" disabled>
             </form>
@@ -428,31 +545,45 @@
     </div>
 
     <script>
-        // Get the modal
+        function displayMealPlanningModal() {
+            mealPlanningModal.style.display = "block";
+        }
+
+        var mealPlanningModal = document.getElementById("mealPlanningModal");
+        var mealPlanningMeals = document.getElementById("mealPlanningMeals");
+
+        function cleanMealPlanningMealsAndSetDisplayOfMealPlanningToNone() {
+            while (mealPlanningMeals.firstChild) {
+                mealPlanningMeals.removeChild(mealPlanningMeals.firstChild);
+            }
+
+            mealPlanningModal.style.display = "none";
+        }
+
+        var span2 = document.getElementById("close2");
+        span2.onclick = function() {
+            cleanMealPlanningMealsAndSetDisplayOfMealPlanningToNone();
+        };
+
+
+
         var modal = document.getElementById("myModal");
-
-        // Get the button that opens the modal
         var btn = document.getElementById("myBtn");
-
-        // Get the <span> element that closes the modal
         var span = document.getElementsByClassName("close")[0];
-
-        // When the user clicks the button, open the modal
         btn.onclick = function() {
             modal.style.display = "block";
-        }
-
-        // When the user clicks on <span> (x), close the modal
+        };
         span.onclick = function() {
             modal.style.display = "none";
-        }
+        };
 
-        // When the user clicks anywhere outside of the modal, close it
         window.onclick = function(event) {
-            if (event.target == modal) {
+            if (event.target === modal) {
                 modal.style.display = "none";
+            } else if (event.target === mealPlanningModal) {
+                cleanMealPlanningMealsAndSetDisplayOfMealPlanningToNone();
             }
-        }
+        };
 
 
         function getButtonIfNull(){
@@ -498,11 +629,11 @@
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.onreadystatechange = function()
             {
-                if(xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                if(xmlHttp.readyState === 4 && xmlHttp.status === 200)
                 {
                     alert(xmlHttp.responseText);
                 }
-            }
+            };
             xmlHttp.open("post", "/emailPost");
             xmlHttp.send(formData);
 
