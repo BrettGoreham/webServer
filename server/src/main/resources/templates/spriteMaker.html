@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        html {
+            min-height: 100%;
+        }
+        body {
+            min-height: 100%;
+            width: 100%;
+            background-image: linear-gradient(to bottom, #28CBFF, #b8faff);
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .alignCenter {
+            margin: auto;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+    </style>
+    <meta charset="UTF-8">
+    <title>Sprite Maker</title>
+</head>
+<body class="alignCenter" id="body">
+    <h2 style="margin-bottom: 10px">Sprite Maker</h2>
+
+    <div>
+        <Label>Currently Selected Color:  </Label>
+        <input id="colorSelector" type="color" value="#ff0000" onchange="updateColorSelected(this.value)">
+
+    </div>
+    <div>
+        <label>
+            <input type="radio" name="mode" value="draw" checked> Draw
+        </label>
+        <label>
+            <input type="radio" name="mode" value="fill"> Fill
+        </label>
+        <label>
+            <input type="radio" name="mode" value="colorPicker"> Color Selector
+        </label>
+    </div>
+    <div style="margin-top: 20px">
+        <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
+    </div>
+
+    <div style="margin-top: 10px">
+        <a id="download" onclick="startDownload()" download="sprite">download as Png</a>
+    </div>
+
+
+    <script type="text/javascript" src="/js/spriteCanvas.js"></script>
+    <script>
+
+        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 64, 64, 15);
+        spriteCanvasObject.setAttachedColorSelector(document.getElementById("colorSelector"));
+
+        function updateColorSelected(color) {
+            spriteCanvasObject.selectedColor = color;
+        }
+
+        function keydown(keyPressed) {
+            if(keyPressed.code === "ArrowUp") {
+                spriteCanvasObject.resizeScaleOfPixels(+1)
+            }
+            else if (keyPressed.code === "ArrowDown") {
+                spriteCanvasObject.resizeScaleOfPixels(-1);
+            }
+        }
+
+        function startDownload() {
+            let aTag = document.getElementById("download");
+
+            let pngDataUrl = spriteCanvasObject.getPngDataUrlOfSprite();
+            console.log(pngDataUrl);
+            aTag.href = pngDataUrl;
+        }
+
+        document.addEventListener('keydown', keydown);
+
+        let modeRadios = document.querySelectorAll('input[type=radio][name="mode"]');
+        modeRadios.forEach( radio => radio.addEventListener('change', () => spriteCanvasObject.setMode(radio.value)));
+    </script>
+</body>
+</html>
