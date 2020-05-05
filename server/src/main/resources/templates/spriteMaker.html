@@ -41,6 +41,9 @@
         <label>
             <input type="radio" name="mode" value="colorPicker"> Color Selector
         </label>
+        <label>
+            <input type="radio" name="mode" value="line"> Line
+        </label>
     </div>
     <div style="margin-top: 20px">
         <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
@@ -53,7 +56,6 @@
 
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
     <script>
-
         let spriteCanvasObject = new spriteCanvas("spriteCanvas", 64, 64, 15);
         spriteCanvasObject.setAttachedColorSelector(document.getElementById("colorSelector"));
 

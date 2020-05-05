@@ -11,29 +11,39 @@ class spriteCanvas {
 
         this._shouldBeDashed = true;
 
-        this.tilesRows = this.createTiles("#FFFFFF");
+        this.tilesRows = this.createTiles("#ffffff");
 
         this.drawCanvasWithTiles();
 
-        this.selectedColor = "#ff0000";
+        this.selectedColor = '#ff0000';
 
         this.mode = "draw";
 
         this.isDrawing = false;
 
-        // Add the event listeners for mousedown, mousemove, and mouseup
+        this.startOfSegmentX = null; // these are used for drawing lines.
+        this.startOfSegmentY = null;
+
+        // Add the event listeners for mousedown, mousemove, mouseup, mouseout.
         this.canvas.addEventListener('mousedown', e => {
             let gridPositionOfClick = this.findXAndYGridPositionsOfClick(e.pageX , e.pageY);
 
-            if (this.mode === "draw") {
-                this.drawTileAtLocation(gridPositionOfClick);
-                this.isDrawing = true;
-            }
-            else if (this.mode === "fill") {
-                this.canvasFillFromPosition(gridPositionOfClick)
-            }
-            else if (this.mode === "colorPicker") {
-                this.selectColorAt(gridPositionOfClick);
+            // sometimes i found the boundaries/border of canvas can be clicked
+            //this would cause a false positive that can be ignored
+            if (this.isCoordinateInCanvas(gridPositionOfClick.x, gridPositionOfClick.y)) {
+                if (this.mode === "draw") {
+                    this.drawTileAtLocation(gridPositionOfClick);
+                    this.isDrawing = true;
+                }
+                else if (this.mode === "fill") {
+                    this.canvasFillFromPosition(gridPositionOfClick)
+                }
+                else if (this.mode === "colorPicker") {
+                    this.selectColorAt(gridPositionOfClick);
+                }
+                else if (this.mode === "line") {
+                    this.startLineAt(gridPositionOfClick);
+                }
             }
         });
 
@@ -41,25 +51,55 @@ class spriteCanvas {
             let gridPositionOfClick = this.findXAndYGridPositionsOfClick(e.pageX , e.pageY);
 
             if (this.isDrawing === true) {
-                this.drawTileAtLocation(gridPositionOfClick);
+                if ((this.lastTrackedPosition.x !== gridPositionOfClick.x ||
+                        this.lastTrackedPosition.y !== gridPositionOfClick.y)
+                        && this.isCoordinateInCanvas(gridPositionOfClick.x, gridPositionOfClick.y)) {
+
+                    if (this.mode === "draw") {
+                        this.drawTileAtLocation(gridPositionOfClick);
+                    } else if (this.mode === "line") {
+                        this.lastTrackedPosition = gridPositionOfClick;
+                        this.drawLineToGridPosition(gridPositionOfClick);
+                    }
+                }
+            }
+        });
+
+        this.canvas.addEventListener('mouseup', e => {
+            let gridPositionOfClick = this.findXAndYGridPositionsOfClick(e.pageX , e.pageY);
+
+            if (this.isDrawing === true) {
+                if ((this.lastTrackedPosition.x !== gridPositionOfClick.x
+                        || this.lastTrackedPosition.y !== gridPositionOfClick.y)
+                    && this.isCoordinateInCanvas(gridPositionOfClick.x, gridPositionOfClick.y)) {
+
+                    if(this.mode === "draw") {
+                        this.drawTileAtLocation(gridPositionOfClick);
+                    }
+                    else if (this.mode === "line") {
+                        this.drawLineToGridPosition(gridPositionOfClick);
+                    }
+
+                    this.lastTrackedPosition = gridPositionOfClick;
+                }
+
+                this.endDrawing();
             }
         });
 
         this.canvas.addEventListener('mouseout', e => {
-            this.isDrawing = false;
-        });
-
-        this.canvas.addEventListener('mouseup', e => {
-
-            let gridPositionOfClick = this.findXAndYGridPositionsOfClick(e.pageX , e.pageY);
-
-
             if (this.isDrawing === true) {
-                this.drawTileAtLocation(gridPositionOfClick);
-                this.isDrawing = false;
+                this.endDrawing();
             }
-        });
+        })
+    }
 
+    endDrawing() {
+        this.isDrawing = false;
+        this.startOfSegmentX = null;
+        this.startOfSegmentY = null;
+        this.lastTrackedPosition = null;
+        this.tempLineWithOriginalColor = null;
     }
 
     shouldBeDashed() {
@@ -73,7 +113,7 @@ class spriteCanvas {
     setAttachedColorSelector(colorSelector) {
         this.colorSelector = colorSelector;
     }
-    /** valid modes currently: draw, fill */
+    /** valid modes currently: draw, fill, colorPicker, line */
     setMode(mode) {
         this.mode = mode;
     }
@@ -113,7 +153,10 @@ class spriteCanvas {
         ctx.beginPath();
         ctx.fillStyle = tile.color;
         ctx.rect(tile.xStart * this.pixelSize, tile.yStart * this.pixelSize, this.pixelSize, this.pixelSize);
-        ctx.stroke();
+
+        if(this.shouldBeDashed()) {
+            ctx.stroke();
+        }
         ctx.fill();
     }
 
@@ -131,9 +174,22 @@ class spriteCanvas {
     }
 
     drawTileAtLocation(gridLocation) {
-        let tile = this.tilesRows[gridLocation.x][gridLocation.y];
-        tile.color = this.selectedColor;
-        this.drawTile(tile);
+        if(this.lastTrackedPosition == null) {
+            let tile = this.tilesRows[gridLocation.x][gridLocation.y];
+            tile.color = this.selectedColor;
+            this.drawTile(tile);
+        } else {
+
+            let tilesToPlot = plotLine(this.lastTrackedPosition.x, this.lastTrackedPosition.y, gridLocation.x, gridLocation.y);
+
+            tilesToPlot.forEach(tileLocation => {
+                let tileToColor = this.tilesRows[tileLocation[0]][tileLocation[1]];
+                tileToColor.color = this.selectedColor;
+                this.drawTile(tileToColor);
+            });
+        }
+
+        this.lastTrackedPosition = gridLocation;
     }
 
     canvasFillFromPosition(gridLocation) {
@@ -175,9 +231,50 @@ class spriteCanvas {
     }
 
     selectColorAt(gridLocation) {
-        console.log(this.tilesRows[gridLocation.x][gridLocation.y].color);
         this.colorSelector.value = this.tilesRows[gridLocation.x][gridLocation.y].color;
+        this.selectedColor = this.colorSelector.value;
     }
+
+
+    startLineAt(gridPositionOfClick) {
+        this.startOfSegmentX = gridPositionOfClick.x;
+        this.startOfSegmentY = gridPositionOfClick.y;
+        this.isDrawing = true;
+
+        this.lastTrackedPosition = gridPositionOfClick;
+        this.drawLineToGridPosition(gridPositionOfClick)
+    }
+
+    drawLineToGridPosition(gridPositionOfClick) {
+
+        if (this.tempLineWithOriginalColor != null) { // reset last line.
+            for (const [key, value] of this.tempLineWithOriginalColor.entries()) {
+                key.color = value;
+
+                this.drawTile(key);
+            }
+
+            this.tempLineWithOriginalColor = null;
+        }
+
+        let tilesEffected = plotLine(this.startOfSegmentX, this.startOfSegmentY, gridPositionOfClick.x, gridPositionOfClick.y);
+
+        this.tempLineWithOriginalColor = new Map();
+
+        tilesEffected.forEach(tileCoordinates => {
+            let tile = this.tilesRows[tileCoordinates[0]][tileCoordinates[1]];
+
+            //if its already the right color fuck it.
+            if (tile.color !== this.selectedColor) {
+                this.tempLineWithOriginalColor.set(tile, tile.color);
+
+                tile.color = this.selectedColor;
+                this.drawTile(tile);
+            }
+        })
+    }
+
+
 
     isCoordinateInCanvas(x, y) {
         if (x < 0 || x >= this.widthInPixels) {
@@ -231,6 +328,8 @@ class spriteCanvas {
 
         return scaledCanvas.toDataURL("image/png");
     }
+
+
 }
 
 class spriteCanvasTile {
@@ -255,4 +354,76 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+}
+
+function plotLineLow(x0, y0, x1, y1) {
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let yIncrement = 1;
+    if (dy < 0) {
+        yIncrement = -1;
+        dy = -1 * dy;
+    }
+
+    let D = (2 * dy) - dx;
+    let y = y0;
+
+    let output = [];
+    for (let x = x0; x <= x1; x++) {
+        output.push([x,y]);
+        if (D > 0) {
+            y = y + yIncrement;
+            D = D - (2 * dx);
+        }
+        D = D + (2 * dy);
+    }
+    return output;
+}
+
+//listen im not going to pretend that i know whats going on here.
+// this is from https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
+// idk i just wanted to draw a line man
+function plotLineHigh(x0, y0, x1, y1) {
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let xIncrement = 1;
+    if (dx < 0) {
+        xIncrement = -1;
+        dx = -1 * dx;
+    }
+
+    let D = 2 * dx - dy;
+    let x = x0;
+
+    let output = [];
+
+    for (let y = y0; y <= y1; y++) {
+        output.push([x,y]);
+        if (D > 0) {
+            x = x + xIncrement;
+            D = D - (2 * dy);
+        }
+        D = D + (2 * dx);
+    }
+
+    return output;
+}
+
+function plotLine(x0, y0, x1, y1) {
+    if (Math.abs(y1 - y0) < Math.abs(x1 - x0)) {
+        if (x0 > x1) {
+            return plotLineLow(x1, y1, x0, y0);
+        }
+        else {
+            return plotLineLow(x0, y0, x1, y1);
+        }
+    }
+    else {
+        if (y0 > y1) {
+            return plotLineHigh(x1, y1, x0, y0);
+        }
+        else {
+            return plotLineHigh(x0, y0, x1, y1);
+        }
+    }
 }
