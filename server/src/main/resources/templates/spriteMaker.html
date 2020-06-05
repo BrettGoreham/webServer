@@ -26,6 +26,15 @@
 <body class="alignCenter" id="body">
     <h2 style="margin-bottom: 10px">Sprite Maker</h2>
 
+    <div style="margin-bottom: 5px">
+        <Label>Size of Sprite  </Label>
+        <input type="number" id="width" style="width: 40px"/>
+        <label> x </label>
+        <input type="number" id="height" style="width: 40px"/>
+        <button onclick="resizeSprite()">Resize</button>
+        <button onclick="resetToCurrentSpriteSize()">Reset to sprite size</button>
+    </div>
+
     <div>
         <Label>Currently Selected Color:  </Label>
         <input id="colorSelector" type="color" value="#ff0000" onchange="updateColorSelected(this.value)">
@@ -44,6 +53,9 @@
         <label>
             <input type="radio" name="mode" value="line"> Line
         </label>
+        <label>
+            <input type="radio" name="mode" value="selectArea"> Select Area
+        </label>
     </div>
     <div style="margin-top: 20px">
         <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
@@ -56,7 +68,7 @@
 
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
     <script>
-        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 64, 64, 15);
+        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15);
         spriteCanvasObject.setAttachedColorSelector(document.getElementById("colorSelector"));
 
         function updateColorSelected(color) {
@@ -84,6 +96,23 @@
 
         let modeRadios = document.querySelectorAll('input[type=radio][name="mode"]');
         modeRadios.forEach( radio => radio.addEventListener('change', () => spriteCanvasObject.setMode(radio.value)));
+
+        let widthText = document.getElementById("width");
+        let heightText = document.getElementById("height");
+        resetToCurrentSpriteSize();
+
+        function resizeSprite() {
+            if(widthText.value !== spriteCanvasObject.widthInPixels
+               || heightText.value !== spriteCanvasObject.heightInPixels) {
+                spriteCanvasObject.resizeCanvasToNewSize(0,0, widthText.value, heightText.value);
+            }
+        }
+
+        function resetToCurrentSpriteSize() {
+            widthText.value = spriteCanvasObject.widthInPixels;
+            heightText.value = spriteCanvasObject.heightInPixels;
+        }
+
     </script>
 </body>
 </html>

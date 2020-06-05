@@ -9,8 +9,6 @@ class spriteCanvas {
         this.widthInPixels = width;
         this.pixelSize = pixelSize;
 
-        this._shouldBeDashed = true;
-
         this.tilesRows = this.createTiles("#ffffff");
 
         this.drawCanvasWithTiles();
@@ -44,6 +42,18 @@ class spriteCanvas {
                 else if (this.mode === "line") {
                     this.startLineAt(gridPositionOfClick);
                 }
+                else if (this.mode === "selectArea") {
+                    if (this.selectedArea != null) {
+                        this.unDrawAreaSelected(this.selectedArea);
+                        document.body.removeChild(this.resizeButton);
+                    }
+                    this.startSelectAt(gridPositionOfClick);
+                    this.lastTrackedPosition = gridPositionOfClick;
+
+                    this.selectedArea =
+                        [gridPositionOfClick,
+                            gridPositionOfClick];
+                }
             }
         });
 
@@ -57,9 +67,16 @@ class spriteCanvas {
 
                     if (this.mode === "draw") {
                         this.drawTileAtLocation(gridPositionOfClick);
-                    } else if (this.mode === "line") {
+                    }
+                    else if (this.mode === "line") {
                         this.lastTrackedPosition = gridPositionOfClick;
                         this.drawLineToGridPosition(gridPositionOfClick);
+                    }
+                    else if (this.mode === "selectArea") {
+                        this.drawAroundAreaSelected(gridPositionOfClick);
+                        this.selectedArea =
+                            [{x: this.startOfSegmentX, y: this.startOfSegmentY},
+                                gridPositionOfClick];
                     }
                 }
             }
@@ -79,8 +96,18 @@ class spriteCanvas {
                     else if (this.mode === "line") {
                         this.drawLineToGridPosition(gridPositionOfClick);
                     }
+                    else if (this.mode === "selectArea") {
+                        this.drawAroundAreaSelected(gridPositionOfClick);
 
-                    this.lastTrackedPosition = gridPositionOfClick;
+                        this.selectedArea =
+                            [{x: this.startOfSegmentX, y: this.startOfSegmentY},
+                              gridPositionOfClick];
+
+                    }
+                }
+
+                if (this.mode === "selectArea") {
+                    this.createResizeButtonAtLocation(this.selectedArea);
                 }
 
                 this.endDrawing();
@@ -89,9 +116,51 @@ class spriteCanvas {
 
         this.canvas.addEventListener('mouseout', e => {
             if (this.isDrawing === true) {
+                if (this.mode === "selectArea") {
+                    this.createResizeButtonAtLocation(this.selectedArea);
+                }
                 this.endDrawing();
             }
-        })
+        });
+    }
+
+
+    resizeCanvasToSelectedArea() {
+        let minX = Math.min(this.selectedArea[0].x, this.selectedArea[1].x);
+        let minY = Math.min(this.selectedArea[0].y, this.selectedArea[1].y);
+        let maxX = Math.max(this.selectedArea[0].x, this.selectedArea[1].x);
+        let maxY = Math.max(this.selectedArea[0].y, this.selectedArea[1].y);
+
+        this.selectedArea = null;
+        document.body.removeChild(this.resizeButton);
+
+        this.resizeCanvasToNewSize(minX, minY, maxX - minX + 1, maxY - minY + 1); //plus 1 to make inclusive
+    }
+
+    resizeCanvasToNewSize(xStart, yStart, newWidth, newHeight) {
+        let oldWidth = this.widthInPixels;
+        let oldHeight = this.heightInPixels;
+
+        this.widthInPixels = newWidth;
+        this.heightInPixels = newHeight;
+
+        this.canvas.width = newWidth * this.pixelSize;
+        this.canvas.height = newHeight * this.pixelSize;
+
+        let newTiles = this.createTiles("#ffffff");
+
+        let xTilesToCopy = Math.min(oldWidth - xStart, this.widthInPixels);
+        let yTilesToCopy = Math.min(oldHeight - yStart, this.heightInPixels);
+
+        for (let y = 0; y < yTilesToCopy; y++) {
+            for (let x = 0; x < xTilesToCopy; x++) {
+                newTiles[x][y].color = this.tilesRows[xStart + x][yStart + y].color;;
+            }
+        }
+
+        this.tilesRows = newTiles;
+
+        this.drawCanvasWithTiles();
     }
 
     endDrawing() {
@@ -100,14 +169,6 @@ class spriteCanvas {
         this.startOfSegmentY = null;
         this.lastTrackedPosition = null;
         this.tempLineWithOriginalColor = null;
-    }
-
-    shouldBeDashed() {
-        return this.pixelSize > 20 && this._shouldBeDashed === true;
-    }
-
-    setShouldBeDashed(shouldBeDashed) {
-        this._shouldBeDashed = shouldBeDashed;
     }
 
     setAttachedColorSelector(colorSelector) {
@@ -144,19 +205,11 @@ class spriteCanvas {
     drawTile(tile) {
         let ctx = this.canvas.getContext("2d");
 
-        if (this.shouldBeDashed()) {
-            ctx.setLineDash([6, 6]);
-        } else {
-            ctx.setLineDash([]);
-            ctx.strokeStyle = tile.color;
-        }
         ctx.beginPath();
+        ctx.strokeStyle = "#FFFFFF";
         ctx.fillStyle = tile.color;
-        ctx.rect(tile.xStart * this.pixelSize, tile.yStart * this.pixelSize, this.pixelSize, this.pixelSize);
-
-        if(this.shouldBeDashed()) {
-            ctx.stroke();
-        }
+        ctx.rect(tile.xStart * this.pixelSize, tile.yStart * this.pixelSize, this.pixelSize - 1, this.pixelSize - 1);
+        ctx.stroke();
         ctx.fill();
     }
 
@@ -275,6 +328,93 @@ class spriteCanvas {
     }
 
 
+    startSelectAt(gridPositionOfClick) {
+        this.startOfSegmentX = gridPositionOfClick.x;
+        this.startOfSegmentY = gridPositionOfClick.y;
+        this.isDrawing = true;
+
+        this.drawAroundAreaSelected(gridPositionOfClick);
+    }
+
+    drawAroundAreaSelected(gridPositionOfClick) {
+        if (this.selectedArea != null) {
+            this.unDrawAreaSelected(
+                this.selectedArea
+            );
+        }
+
+        this.lastTrackedPosition = gridPositionOfClick;
+
+        let topLeftX = Math.min(this.startOfSegmentX, gridPositionOfClick.x);
+        let topLeftY = Math.min(this.startOfSegmentY, gridPositionOfClick.y);
+        let bottomRightX = Math.max(this.startOfSegmentX, gridPositionOfClick.x);
+        let bottomRightY = Math.max(this.startOfSegmentY, gridPositionOfClick.y);
+
+        let startX = topLeftX * this.pixelSize;
+        let startY = topLeftY * this.pixelSize;
+        let endX = bottomRightX * this.pixelSize + (this.pixelSize - 1);
+        let endY = bottomRightY * this.pixelSize + (this.pixelSize - 1); // extra part to get end of pixel instead of start.
+
+        let ctx = this.canvas.getContext("2d");
+        ctx.strokeStyle = '#f5ea00';
+        ctx.beginPath();
+        ctx.rect(startX, startY, endX - startX, endY - startY);
+        ctx.stroke();
+    }
+
+    //find which corner is the top left one. which is the lowest versions of each and then bottom right is highest
+    // these may be top left and bottom right. or top right and bottom left. just find the top left and bottom right in case.
+
+    unDrawAreaSelected(selectedArea) {
+
+        let topLeftX = Math.min(selectedArea[0].x, selectedArea[1].x);
+        let topLeftY = Math.min(selectedArea[0].y, selectedArea[1].y);
+        let bottomRightX = Math.max(selectedArea[0].x, selectedArea[1].x);
+        let bottomRightY = Math.max(selectedArea[0].y, selectedArea[1].y);
+
+        for (let x = topLeftX; x <= bottomRightX; x++) {
+            this.drawTile(this.tilesRows[x][topLeftY]);
+            this.drawTile(this.tilesRows[x][bottomRightY]);
+        }
+        for(let y = topLeftY; y <= bottomRightY; y++) {
+            this.drawTile(this.tilesRows[topLeftX][y]);
+            this.drawTile(this.tilesRows[bottomRightX][y]);
+        }
+
+        for (let x = topLeftX; x <= bottomRightX; x++) {
+            if (topLeftY + 1 < this.heightInPixels) {
+                this.drawTile(this.tilesRows[x][topLeftY + 1]);
+            }
+            if (bottomRightY + 1 < this.heightInPixels) {
+                this.drawTile(this.tilesRows[x][bottomRightY + 1]);
+            }
+        }
+        for(let y = topLeftY; y <= bottomRightY; y++) {
+            if (topLeftX + 1 < this.widthInPixels) {
+                this.drawTile(this.tilesRows[topLeftX + 1][y]);
+            }
+            if (bottomRightX + 1 < this.widthInPixels) {
+                this.drawTile(this.tilesRows[bottomRightX + 1][y]);
+            }
+        }
+
+        for (let x = topLeftX; x <= bottomRightX; x++) {
+            if (topLeftY - 1 > 0) {
+                this.drawTile(this.tilesRows[x][topLeftY - 1]);
+            }
+            if (bottomRightY - 1 > 0) {
+                this.drawTile(this.tilesRows[x][bottomRightY - 1]);
+            }
+        }
+        for(let y = topLeftY; y <= bottomRightY; y++) {
+            if (topLeftX - 1 > 0) {
+                this.drawTile(this.tilesRows[topLeftX - 1][y]);
+            }
+            if (bottomRightX - 1 > 0) {
+                this.drawTile(this.tilesRows[bottomRightX - 1][y]);
+            }
+        }
+    }
 
     isCoordinateInCanvas(x, y) {
         if (x < 0 || x >= this.widthInPixels) {
@@ -330,6 +470,26 @@ class spriteCanvas {
     }
 
 
+    createResizeButtonAtLocation(selectedArea) {
+
+        let xcoord = ((selectedArea[0].x + 1) * this.pixelSize) + this.canvas.offsetLeft;
+        let ycoord = ((selectedArea[0].y + 1) * this.pixelSize) + this.canvas.offsetTop;
+
+        let button = document.createElement("button");
+        button.innerHTML = "Resize Sprite";
+        button.style.position = 'absolute';
+        button.style.top = ycoord + "px";
+        button.style.left = xcoord + "px";
+
+        let spriteCanvas = this;
+
+        button.onclick = function() {
+            functionToResize(spriteCanvas);
+        };
+        document.body.appendChild(button);
+
+        this.resizeButton = button;
+    }
 }
 
 class spriteCanvasTile {
@@ -338,6 +498,10 @@ class spriteCanvasTile {
         this.yStart = yStart;
         this.color = color;
     }
+}
+
+function functionToResize(spriteCanvas) {
+    spriteCanvas.resizeCanvasToSelectedArea();
 }
 
 // I stole this from stack overflow. if it doesnt work fight me
