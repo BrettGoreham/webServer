@@ -36,8 +36,10 @@
     </div>
 
     <div>
-        <Label>Currently Selected Color:  </Label>
+        <label>Currently Selected Color:  </label>
         <input id="colorSelector" type="color" value="#ff0000" onchange="updateColorSelected(this.value)">
+        <label>  Transparency:  </label>
+        <input type="range" id="transparency" max="255" min="0" value="255" onchange="transparencyChange()">
 
     </div>
     <div>
@@ -68,7 +70,7 @@
 
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
     <script>
-        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15);
+        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15, "#FFFFFF");
         spriteCanvasObject.setAttachedColorSelector(document.getElementById("colorSelector"));
 
         function updateColorSelected(color) {
@@ -111,6 +113,19 @@
         function resetToCurrentSpriteSize() {
             widthText.value = spriteCanvasObject.widthInPixels;
             heightText.value = spriteCanvasObject.heightInPixels;
+        }
+
+        transparencyChange();
+        function transparencyChange() {
+            let transparency = document.getElementById("transparency");
+
+            if(transparency.value < 0) {
+                transparency.value = 0;
+            } else if (transparency.value > 255) {
+                transparency.value = 255;
+            }
+
+            spriteCanvasObject.setTransparency(transparency.value);
         }
 
     </script>
