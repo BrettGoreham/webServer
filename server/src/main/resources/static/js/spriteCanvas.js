@@ -181,9 +181,11 @@ class spriteCanvas {
     }
     /** valid modes currently: draw, fill, colorPicker, line */
     setMode(mode) {
-        this.mode = mode
-        if (this.resizeButton != null) {
+        this.mode = mode;
+        if (this.selectedArea != null) {
+            this.unDrawAreaSelected(this.selectedArea);
             document.body.removeChild(this.resizeButton);
+            this.selectedArea = null;
         }
     }
 
@@ -218,18 +220,15 @@ class spriteCanvas {
 
         let startX = tile.xStart * this.pixelSize;
         let startY = tile.yStart * this.pixelSize;
-
-        console.log(tile.xStart + "," + tile.yStart);
-
         let width = Math.max(this.pixelSize - 1, 1); // unsure if this is the best but when pixel size was one
         let height = Math.max(this.pixelSize - 1, 1); // it would make the entire drawing disappear.
 
         let ctx = this.canvas.getContext("2d");
 
         ctx.beginPath();
+        //this clears the square so it can be drawn again isnt really required unless transparency is messed wth
         ctx.clearRect(startX, startY, width, height);
 
-        //this clears the square so it can be drawn again isnt really required unless transparency is messed wth
         ctx.rect(startX, startY, width, height);
 
         if (this.pixelSize < 10) {
