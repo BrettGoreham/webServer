@@ -64,6 +64,7 @@
     </div>
 
     <div style="margin-top: 10px">
+        <input type="file" name="import" id="import" onchange="importImage()">
         <a id="download" onclick="startDownload()" download="sprite">download as Png</a>
     </div>
 
@@ -92,6 +93,22 @@
             let pngDataUrl = spriteCanvasObject.getPngDataUrlOfSprite();
             console.log(pngDataUrl);
             aTag.href = pngDataUrl;
+        }
+
+        function importImage() {
+            let image = document.getElementById("import")
+            console.log(image);
+
+            let file = image.files[0];
+            let reader = new FileReader();
+
+            reader.addEventListener("load", function() {
+                spriteCanvasObject.importImageFromPngIntoTileCanvas(reader.result);
+            }, false);
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
         }
 
         document.addEventListener('keydown', keydown);

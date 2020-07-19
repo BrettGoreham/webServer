@@ -13,7 +13,7 @@ class spriteCanvas {
 
         this.transparency = 255;
 
-        this.tilesRows = this.createTiles("#ffffff");
+        this.tilesRows = this.createTiles();
 
         this.drawCanvasWithTiles();
 
@@ -151,15 +151,15 @@ class spriteCanvas {
         this.canvas.width = newWidth * this.pixelSize;
         this.canvas.height = newHeight * this.pixelSize;
 
-        let newTiles = this.createTiles("#ffffff");
+        let newTiles = this.createTiles();
 
         let xTilesToCopy = Math.min(oldWidth - xStart, this.widthInPixels);
         let yTilesToCopy = Math.min(oldHeight - yStart, this.heightInPixels);
 
         for (let y = 0; y < yTilesToCopy; y++) {
             for (let x = 0; x < xTilesToCopy; x++) {
-                newTiles[x][y].color = this.tilesRows[xStart + x][yStart + y].color;
-                newTiles[x][y].transparency = this.tilesRows[xStart + x][yStart + y].transparency;
+                newTiles[x][y].color = this.tilesRows[yStart + y][xStart + x].color;
+                newTiles[x][y].transparency = this.tilesRows[yStart + y][xStart + x].transparency;
             }
         }
 
@@ -181,20 +181,23 @@ class spriteCanvas {
     }
     /** valid modes currently: draw, fill, colorPicker, line */
     setMode(mode) {
-        this.mode = mode;
+        this.mode = mode
+        if (this.resizeButton != null) {
+            document.body.removeChild(this.resizeButton);
+        }
     }
 
     setTransparency(transparency) {
         this.transparency = transparency;
     }
 
-    createTiles(defaultColor) {
+    createTiles() {
         let tileRows = [];
 
-        for (let widthCount = 0; widthCount < this.widthInPixels; widthCount++){
+        for (let heightCount = 0; heightCount < this.heightInPixels; heightCount++){
             let tileRow = [];
-            for (let heightCount = 0; heightCount < this.heightInPixels; heightCount++){
-                tileRow.push(new spriteCanvasTile(widthCount, heightCount, defaultColor, this.transparency))
+            for (let widthCount = 0; widthCount < this.widthInPixels; widthCount++){
+                tileRow.push(new spriteCanvasTile(widthCount, heightCount, this.backgroundColor, this.transparency))
             }
 
             tileRows.push(tileRow);
@@ -215,23 +218,21 @@ class spriteCanvas {
 
         let startX = tile.xStart * this.pixelSize;
         let startY = tile.yStart * this.pixelSize;
-        let width = this.pixelSize - 1;
-        let height = this.pixelSize - 1;
-        
+
+        console.log(tile.xStart + "," + tile.yStart);
+
+        let width = Math.max(this.pixelSize - 1, 1); // unsure if this is the best but when pixel size was one
+        let height = Math.max(this.pixelSize - 1, 1); // it would make the entire drawing disappear.
+
         let ctx = this.canvas.getContext("2d");
 
         ctx.beginPath();
+        ctx.clearRect(startX, startY, width, height);
+
+        //this clears the square so it can be drawn again isnt really required unless transparency is messed wth
         ctx.rect(startX, startY, width, height);
 
-        //drawing a square with background color first because transparency doesnt like if you draw multiple squares on top
-        //so like a reset basically;
-        ctx.strokeStyle = this.backgroundColor;
-        ctx.fillStyle = this.backgroundColor;
-        ctx.globalAlpha = 1;
-        ctx.stroke();
-        ctx.fill();
-
-        if (this.pixelSize < 5) {
+        if (this.pixelSize < 10) {
             ctx.strokeStyle = tile.color;
         } else {
             ctx.strokeStyle = "#FFFFFF"; // this will give a nice grid but if pixels are small it dominates
@@ -263,7 +264,7 @@ class spriteCanvas {
 
     drawTileAtLocation(gridLocation) {
         if(this.lastTrackedPosition == null) {
-            let tile = this.tilesRows[gridLocation.x][gridLocation.y];
+            let tile = this.tilesRows[gridLocation.y][gridLocation.x];
             tile.color = this.selectedColor;
             tile.transparency = this.transparency;
             this.drawTile(tile);
@@ -272,7 +273,7 @@ class spriteCanvas {
             let tilesToPlot = plotLine(this.lastTrackedPosition.x, this.lastTrackedPosition.y, gridLocation.x, gridLocation.y);
 
             tilesToPlot.forEach(tileLocation => {
-                let tileToColor = this.tilesRows[tileLocation[0]][tileLocation[1]];
+                let tileToColor = this.tilesRows[tileLocation[1]][tileLocation[0]];
                 tileToColor.color = this.selectedColor;
                 tileToColor.transparency = this.transparency;
                 this.drawTile(tileToColor);
@@ -283,13 +284,13 @@ class spriteCanvas {
     }
 
     canvasFillFromPosition(gridLocation) {
-        let startTile = this.tilesRows[gridLocation.x][gridLocation.y];
+        let startTile = this.tilesRows[gridLocation.y][gridLocation.x];
 
         let colorToFill = startTile.color;
         let transparencyToFill = startTile.transparency;
 
         let tilesToColor = [startTile];
-        let visitedTiles = new Map(); //this is tiles + value if they needed to be visited or not.
+        let visitedTiles = new Map(); //this is tiles + value if they needed to be coloured or not.
 
         // this will give the tiles directly surrounding this tile.
         let transformations = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -305,7 +306,7 @@ class spriteCanvas {
                 let y = tileToVisit.yStart + transformation[1];
 
                 if(this.isCoordinateInCanvas(x,y)) {
-                    let potentialTileToVisit = this.tilesRows[x][y];
+                    let potentialTileToVisit = this.tilesRows[y][x];
 
                     if (!visitedTiles.has(potentialTileToVisit)) {
 
@@ -324,7 +325,7 @@ class spriteCanvas {
     }
 
     selectColorAt(gridLocation) {
-        this.colorSelector.value = this.tilesRows[gridLocation.x][gridLocation.y].color;
+        this.colorSelector.value = this.tilesRows[gridLocation.y][gridLocation.x].color;
         this.selectedColor = this.colorSelector.value;
     }
 
@@ -356,7 +357,7 @@ class spriteCanvas {
         this.tempLineWithOriginalColor = new Map();
 
         tilesEffected.forEach(tileCoordinates => {
-            let tile = this.tilesRows[tileCoordinates[0]][tileCoordinates[1]];
+            let tile = this.tilesRows[tileCoordinates[1]][tileCoordinates[0]];
 
             //if its already the right color fuck it.
             if (tile.color !== this.selectedColor) {
@@ -415,45 +416,45 @@ class spriteCanvas {
         let bottomRightY = Math.max(selectedArea[0].y, selectedArea[1].y);
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
-            this.drawTile(this.tilesRows[x][topLeftY]);
-            this.drawTile(this.tilesRows[x][bottomRightY]);
+            this.drawTile(this.tilesRows[topLeftY][x]);
+            this.drawTile(this.tilesRows[bottomRightY][x]);
         }
         for(let y = topLeftY; y <= bottomRightY; y++) {
-            this.drawTile(this.tilesRows[topLeftX][y]);
-            this.drawTile(this.tilesRows[bottomRightX][y]);
+            this.drawTile(this.tilesRows[y][topLeftX]);
+            this.drawTile(this.tilesRows[y][bottomRightX]);
         }
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
             if (topLeftY + 1 < this.heightInPixels) {
-                this.drawTile(this.tilesRows[x][topLeftY + 1]);
+                this.drawTile(this.tilesRows[topLeftY + 1][x]);
             }
             if (bottomRightY + 1 < this.heightInPixels) {
-                this.drawTile(this.tilesRows[x][bottomRightY + 1]);
+                this.drawTile(this.tilesRows[bottomRightY + 1][x]);
             }
         }
         for(let y = topLeftY; y <= bottomRightY; y++) {
             if (topLeftX + 1 < this.widthInPixels) {
-                this.drawTile(this.tilesRows[topLeftX + 1][y]);
+                this.drawTile(this.tilesRows[y][topLeftX + 1]);
             }
             if (bottomRightX + 1 < this.widthInPixels) {
-                this.drawTile(this.tilesRows[bottomRightX + 1][y]);
+                this.drawTile(this.tilesRows[y][bottomRightX + 1]);
             }
         }
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
             if (topLeftY - 1 > 0) {
-                this.drawTile(this.tilesRows[x][topLeftY - 1]);
+                this.drawTile(this.tilesRows[topLeftY - 1][x]);
             }
             if (bottomRightY - 1 > 0) {
-                this.drawTile(this.tilesRows[x][bottomRightY - 1]);
+                this.drawTile(this.tilesRows[bottomRightY - 1][x]);
             }
         }
         for(let y = topLeftY; y <= bottomRightY; y++) {
             if (topLeftX - 1 > 0) {
-                this.drawTile(this.tilesRows[topLeftX - 1][y]);
+                this.drawTile(this.tilesRows[y][topLeftX - 1]);
             }
             if (bottomRightX - 1 > 0) {
-                this.drawTile(this.tilesRows[bottomRightX - 1][y]);
+                this.drawTile(this.tilesRows[y][bottomRightX - 1]);
             }
         }
     }
@@ -494,9 +495,10 @@ class spriteCanvas {
         let id = ctx.createImageData(1, 1);
         let d = id.data;
 
-        for (let x = 0; x < this.widthInPixels; x++) {
-            for (let y = 0; y < this.heightInPixels; y++) {
-                let tile = this.tilesRows[x][y];
+        for (let y = 0; y < this.heightInPixels; y++) {
+            for (let x = 0; x < this.widthInPixels; x++) {
+
+                let tile = this.tilesRows[y][x];
 
                 let colorResult = hexToRgb(tile.color);
 
@@ -509,6 +511,53 @@ class spriteCanvas {
         }
 
         return scaledCanvas.toDataURL("image/png");
+    }
+
+
+    importImageFromPngIntoTileCanvas(image) {
+        let img = document.createElement("img");
+        img.onload = () => this.getImageData(img);
+        img.src = image;
+    }
+
+    getImageData(image) {
+        let importImageCanvas = document.createElement("canvas");
+        let importImageContext = importImageCanvas.getContext("2d");
+        importImageContext.drawImage(image,0,0);
+
+        let imageData = importImageContext.getImageData(0,0,image.width, image.height);
+        console.log("imageData:");
+        console.log(imageData);
+
+        this.widthInPixels = image.width;
+        this.heightInPixels = image.height;
+        this.canvas.height = this.widthInPixels * this.pixelSize;
+        this.canvas.width = this.heightInPixels * this.pixelSize;
+
+        let imageDataCursor = 0; // used to keep track of where we are in the image data datafield
+        let tileRows = [];
+
+        for (let heightCount = 0; heightCount < this.heightInPixels; heightCount++){
+
+            let tileRow = [];
+            for (let widthCount = 0; widthCount < this.widthInPixels; widthCount++){
+                console.log(imageDataCursor);
+                tileRow.push(
+                    new spriteCanvasTile(
+                        widthCount,
+                        heightCount,
+                        rgbToHex(imageData.data[imageDataCursor++], imageData.data[imageDataCursor++], imageData.data[imageDataCursor++]),
+                        imageData.data[imageDataCursor++]
+                    )
+                )
+            }
+
+            tileRows.push(tileRow);
+        }
+
+
+        this.tilesRows = tileRows;
+        this.drawCanvasWithTiles();
     }
 
 
@@ -563,6 +612,18 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+}
+
+function rgbToHex(r,g,b) {
+    return "#" + rgbToHexHelper(r) + rgbToHexHelper(g) + rgbToHexHelper(b);
+}
+
+function rgbToHexHelper(number) {
+    let hex = Number(number).toString(16);
+    if (hex.length < 2) {
+        hex = "0" + hex;
+    }
+    return hex;
 }
 
 function plotLineLow(x0, y0, x1, y1) {
