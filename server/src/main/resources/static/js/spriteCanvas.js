@@ -17,6 +17,9 @@ class spriteCanvas {
 
         this.drawCanvasWithTiles();
 
+        this.undoStack = []; //used to undo
+        this.drawingChanges = new Map(); //Map is in the form key = tile value = [color, transparency] where both are previous
+
         this.selectedColor = '#ff0000';
 
         this.mode = "draw";
@@ -34,11 +37,12 @@ class spriteCanvas {
             //this would cause a false positive that can be ignored
             if (this.isCoordinateInCanvas(gridPositionOfClick.x, gridPositionOfClick.y)) {
                 if (this.mode === "draw") {
-                    this.drawTileAtLocation(gridPositionOfClick);
+                    this.drawTileToLocation(gridPositionOfClick);
                     this.isDrawing = true;
                 }
                 else if (this.mode === "fill") {
                     this.canvasFillFromPosition(gridPositionOfClick)
+                    this.endDrawing();
                 }
                 else if (this.mode === "colorPicker") {
                     this.selectColorAt(gridPositionOfClick);
@@ -48,15 +52,15 @@ class spriteCanvas {
                 }
                 else if (this.mode === "selectArea") {
                     if (this.selectedArea != null) {
-                        this.unDrawAreaSelected(this.selectedArea);
+                        this.unDrawAreaSelected();
                         document.body.removeChild(this.resizeButton);
                     }
-                    this.startSelectAt(gridPositionOfClick);
-                    this.lastTrackedPosition = gridPositionOfClick;
 
                     this.selectedArea =
                         [gridPositionOfClick,
                             gridPositionOfClick];
+                    this.startSelectAt(gridPositionOfClick);
+                    this.lastTrackedPosition = gridPositionOfClick;
                 }
             }
         });
@@ -70,17 +74,22 @@ class spriteCanvas {
                         && this.isCoordinateInCanvas(gridPositionOfClick.x, gridPositionOfClick.y)) {
 
                     if (this.mode === "draw") {
-                        this.drawTileAtLocation(gridPositionOfClick);
+                        this.drawTileToLocation(gridPositionOfClick);
                     }
                     else if (this.mode === "line") {
                         this.lastTrackedPosition = gridPositionOfClick;
                         this.drawLineToGridPosition(gridPositionOfClick);
                     }
                     else if (this.mode === "selectArea") {
-                        this.drawAroundAreaSelected(gridPositionOfClick);
+                        if (this.selectedArea != null) {
+                            this.unDrawAreaSelected();
+                        }
                         this.selectedArea =
                             [{x: this.startOfSegmentX, y: this.startOfSegmentY},
                                 gridPositionOfClick];
+                        this.drawAroundAreaSelected();
+
+                        this.lastTrackedPosition = gridPositionOfClick;
                     }
                 }
             }
@@ -95,7 +104,7 @@ class spriteCanvas {
                     && this.isCoordinateInCanvas(gridPositionOfClick.x, gridPositionOfClick.y)) {
 
                     if(this.mode === "draw") {
-                        this.drawTileAtLocation(gridPositionOfClick);
+                        this.drawTileToLocation(gridPositionOfClick);
                     }
                     else if (this.mode === "line") {
                         this.drawLineToGridPosition(gridPositionOfClick);
@@ -130,15 +139,16 @@ class spriteCanvas {
 
 
     resizeCanvasToSelectedArea() {
-        let minX = Math.min(this.selectedArea[0].x, this.selectedArea[1].x);
-        let minY = Math.min(this.selectedArea[0].y, this.selectedArea[1].y);
-        let maxX = Math.max(this.selectedArea[0].x, this.selectedArea[1].x);
-        let maxY = Math.max(this.selectedArea[0].y, this.selectedArea[1].y);
+        let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
 
         this.selectedArea = null;
         document.body.removeChild(this.resizeButton);
 
-        this.resizeCanvasToNewSize(minX, minY, maxX - minX + 1, maxY - minY + 1); //plus 1 to make inclusive
+        this.resizeCanvasToNewSize(
+            selectedAreaValues.minX,
+            selectedAreaValues.minY,
+            selectedAreaValues.maxX - selectedAreaValues.minX + 1,
+            selectedAreaValues.maxY - selectedAreaValues.minY + 1); //plus 1 to make inclusive
     }
 
     resizeCanvasToNewSize(xStart, yStart, newWidth, newHeight) {
@@ -169,11 +179,14 @@ class spriteCanvas {
     }
 
     endDrawing() {
+        this.addDrawingToUndoMap(this.drawingChanges);
+
+        this.drawingChanges = new Map();
+
         this.isDrawing = false;
         this.startOfSegmentX = null;
         this.startOfSegmentY = null;
         this.lastTrackedPosition = null;
-        this.tempLineWithOriginalColor = null;
     }
 
     setAttachedColorSelector(colorSelector) {
@@ -183,7 +196,7 @@ class spriteCanvas {
     setMode(mode) {
         this.mode = mode;
         if (this.selectedArea != null) {
-            this.unDrawAreaSelected(this.selectedArea);
+            this.unDrawAreaSelected();
             document.body.removeChild(this.resizeButton);
             this.selectedArea = null;
         }
@@ -199,7 +212,7 @@ class spriteCanvas {
         for (let heightCount = 0; heightCount < this.heightInPixels; heightCount++){
             let tileRow = [];
             for (let widthCount = 0; widthCount < this.widthInPixels; widthCount++){
-                tileRow.push(new spriteCanvasTile(widthCount, heightCount, this.backgroundColor, this.transparency))
+                tileRow.push(new spriteCanvasTile(widthCount, heightCount, this.backgroundColor, 255))
             }
 
             tileRows.push(tileRow);
@@ -214,6 +227,18 @@ class spriteCanvas {
                 this.drawTile(tile);
             });
         });
+
+        if(this.selectedArea != null) {
+            document.body.removeChild(this.resizeButton);
+            this.drawAroundAreaSelected();
+            this.createResizeButtonAtLocation(this.selectedArea);
+        }
+    }
+
+    drawListOfTiles(tilesToDraw) {
+        tilesToDraw.forEach((tileToDraw) => {
+            this.drawTile(tileToDraw);
+        })
     }
 
     drawTile(tile) {
@@ -234,7 +259,7 @@ class spriteCanvas {
         if (this.pixelSize < 10) {
             ctx.strokeStyle = tile.color;
         } else {
-            ctx.strokeStyle = "#FFFFFF"; // this will give a nice grid but if pixels are small it dominates
+            ctx.strokeStyle = "#ffffff"; // this will give a nice grid but if pixels are small it dominates
         }
         ctx.fillStyle = tile.color;
         ctx.globalAlpha = this.getGlobalAlphaFromTransparency(tile.transparency);
@@ -261,25 +286,36 @@ class spriteCanvas {
         this.drawCanvasWithTiles();
     }
 
-    drawTileAtLocation(gridLocation) {
-        if(this.lastTrackedPosition == null) {
+    drawTileToLocation(gridLocation) {
+        let changesToDraw = [];
+
+        if (this.lastTrackedPosition == null) {
             let tile = this.tilesRows[gridLocation.y][gridLocation.x];
-            tile.color = this.selectedColor;
-            tile.transparency = this.transparency;
-            this.drawTile(tile);
+
+            this.checkIfTileNeedsToBeChangedAndAddToChangeList(tile, changesToDraw);
         } else {
 
             let tilesToPlot = plotLine(this.lastTrackedPosition.x, this.lastTrackedPosition.y, gridLocation.x, gridLocation.y);
 
             tilesToPlot.forEach(tileLocation => {
                 let tileToColor = this.tilesRows[tileLocation[1]][tileLocation[0]];
-                tileToColor.color = this.selectedColor;
-                tileToColor.transparency = this.transparency;
-                this.drawTile(tileToColor);
+
+                this.checkIfTileNeedsToBeChangedAndAddToChangeList(tileToColor, changesToDraw);
             });
         }
 
+        this.drawListOfTiles(changesToDraw);
         this.lastTrackedPosition = gridLocation;
+    }
+
+    checkIfTileNeedsToBeChangedAndAddToChangeList(tile, changesToDraw) {
+        if (tile.color !==this.selectedColor || tile.transparency !== this.transparency) {
+            this.addTileToDrawingChanges(tile);
+            tile.color = this.selectedColor;
+            tile.transparency = this.transparency;
+
+            changesToDraw.push(tile);
+        }
     }
 
     canvasFillFromPosition(gridLocation) {
@@ -296,15 +332,16 @@ class spriteCanvas {
         while(tilesToColor.length > 0) {
             let tileToVisit = tilesToColor.pop();
 
+            this.addTileToDrawingChanges(tileToVisit);
+
             tileToVisit.color = this.selectedColor;
             tileToVisit.transparency = this.transparency;
-            this.drawTile(tileToVisit);
 
             transformations.forEach((transformation) => {
                 let x = tileToVisit.xStart + transformation[0];
                 let y = tileToVisit.yStart + transformation[1];
 
-                if(this.isCoordinateInCanvas(x,y)) {
+                if (this.isCoordinateInCanvas(x,y)) {
                     let potentialTileToVisit = this.tilesRows[y][x];
 
                     if (!visitedTiles.has(potentialTileToVisit)) {
@@ -321,6 +358,11 @@ class spriteCanvas {
                 }
             });
         }
+
+        // for this action we can just draw directly from the changes as its a one click and done
+        this.drawListOfTiles(
+            Array.from(this.drawingChanges.keys())
+        );
     }
 
     selectColorAt(gridLocation) {
@@ -339,34 +381,26 @@ class spriteCanvas {
     }
 
     drawLineToGridPosition(gridPositionOfClick) {
+        this.resetTilesBackToPreviousColors(this.drawingChanges);
+        this.drawListOfTiles(Array.from(this.drawingChanges.keys()));
 
-        if (this.tempLineWithOriginalColor != null) { // reset last line.
-            for (const [key, value] of this.tempLineWithOriginalColor.entries()) {
-                key.color = value[0];
-                key.transparency = value[1];
-
-                this.drawTile(key);
-            }
-
-            this.tempLineWithOriginalColor = null;
-        }
+        this.drawingChanges = new Map();
 
         let tilesEffected = plotLine(this.startOfSegmentX, this.startOfSegmentY, gridPositionOfClick.x, gridPositionOfClick.y);
-
-        this.tempLineWithOriginalColor = new Map();
 
         tilesEffected.forEach(tileCoordinates => {
             let tile = this.tilesRows[tileCoordinates[1]][tileCoordinates[0]];
 
-            //if its already the right color fuck it.
-            if (tile.color !== this.selectedColor) {
-                this.tempLineWithOriginalColor.set(tile, [tile.color, tile.transparency]);
+            //if its already the right color no need to redraw
+            if (tile.color !==this.selectedColor || tile.transparency !== this.transparency) {
+                this.addTileToDrawingChanges(tile)
 
                 tile.color = this.selectedColor;
                 tile.transparency = this.transparency;
-                this.drawTile(tile);
             }
         })
+
+        this.drawListOfTiles(Array.from(this.drawingChanges.keys()));
     }
 
 
@@ -375,27 +409,16 @@ class spriteCanvas {
         this.startOfSegmentY = gridPositionOfClick.y;
         this.isDrawing = true;
 
-        this.drawAroundAreaSelected(gridPositionOfClick);
+        this.drawAroundAreaSelected();
     }
 
-    drawAroundAreaSelected(gridPositionOfClick) {
-        if (this.selectedArea != null) {
-            this.unDrawAreaSelected(
-                this.selectedArea
-            );
-        }
+    drawAroundAreaSelected() {
+        let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
 
-        this.lastTrackedPosition = gridPositionOfClick;
-
-        let topLeftX = Math.min(this.startOfSegmentX, gridPositionOfClick.x);
-        let topLeftY = Math.min(this.startOfSegmentY, gridPositionOfClick.y);
-        let bottomRightX = Math.max(this.startOfSegmentX, gridPositionOfClick.x);
-        let bottomRightY = Math.max(this.startOfSegmentY, gridPositionOfClick.y);
-
-        let startX = topLeftX * this.pixelSize;
-        let startY = topLeftY * this.pixelSize;
-        let endX = bottomRightX * this.pixelSize + (this.pixelSize - 1);
-        let endY = bottomRightY * this.pixelSize + (this.pixelSize - 1); // extra part to get end of pixel instead of start.
+        let startX = selectedAreaValues.minX * this.pixelSize;
+        let startY = selectedAreaValues.minY * this.pixelSize;
+        let endX = selectedAreaValues.maxX * this.pixelSize + (this.pixelSize - 1);
+        let endY = selectedAreaValues.maxY * this.pixelSize + (this.pixelSize - 1); // extra part to get end of pixel instead of start.
 
         let ctx = this.canvas.getContext("2d");
         ctx.strokeStyle = '#f5ea00';
@@ -407,12 +430,13 @@ class spriteCanvas {
     //find which corner is the top left one. which is the lowest versions of each and then bottom right is highest
     // these may be top left and bottom right. or top right and bottom left. just find the top left and bottom right in case.
 
-    unDrawAreaSelected(selectedArea) {
+    unDrawAreaSelected() {
+        let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
 
-        let topLeftX = Math.min(selectedArea[0].x, selectedArea[1].x);
-        let topLeftY = Math.min(selectedArea[0].y, selectedArea[1].y);
-        let bottomRightX = Math.max(selectedArea[0].x, selectedArea[1].x);
-        let bottomRightY = Math.max(selectedArea[0].y, selectedArea[1].y);
+        let topLeftX = selectedAreaValues.minX;
+        let topLeftY = selectedAreaValues.minY;
+        let bottomRightX = selectedAreaValues.maxX;
+        let bottomRightY = selectedAreaValues.maxY;
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
             this.drawTile(this.tilesRows[topLeftY][x]);
@@ -482,13 +506,22 @@ class spriteCanvas {
         return {x: x, y: y}
     }
 
+    getMinAndMaxXAndYFromSelectedArea() {
+        let minX = Math.min(this.selectedArea[0].x, this.selectedArea[1].x);
+        let minY = Math.min(this.selectedArea[0].y, this.selectedArea[1].y);
+        let maxX = Math.max(this.selectedArea[0].x, this.selectedArea[1].x);
+        let maxY = Math.max(this.selectedArea[0].y, this.selectedArea[1].y);
+
+        return {minX: minX, minY: minY, maxX: maxX, maxY: maxY};
+    }
+
     //i dont know javascript so this is probably a bad way of doing this
     //idea create temp canvas with the right width and height then create little pixel images and fill in.
     getPngDataUrlOfSprite() {
         let scaledCanvas = document.createElement("canvas");
         scaledCanvas.width = this.widthInPixels;
         scaledCanvas.height = this.heightInPixels;
-        scaledCanvas.background = "#FFFFFF";
+        scaledCanvas.background = "#ffffff";
         let ctx = scaledCanvas.getContext("2d");
 
         let id = ctx.createImageData(1, 1);
@@ -525,13 +558,11 @@ class spriteCanvas {
         importImageContext.drawImage(image,0,0);
 
         let imageData = importImageContext.getImageData(0,0,image.width, image.height);
-        console.log("imageData:");
-        console.log(imageData);
 
         this.widthInPixels = image.width;
         this.heightInPixels = image.height;
-        this.canvas.height = this.widthInPixels * this.pixelSize;
-        this.canvas.width = this.heightInPixels * this.pixelSize;
+        this.canvas.width = this.widthInPixels * this.pixelSize;
+        this.canvas.height = this.heightInPixels * this.pixelSize;
 
         let imageDataCursor = 0; // used to keep track of where we are in the image data datafield
         let tileRows = [];
@@ -540,7 +571,6 @@ class spriteCanvas {
 
             let tileRow = [];
             for (let widthCount = 0; widthCount < this.widthInPixels; widthCount++){
-                console.log(imageDataCursor);
                 tileRow.push(
                     new spriteCanvasTile(
                         widthCount,
@@ -554,7 +584,6 @@ class spriteCanvas {
             tileRows.push(tileRow);
         }
 
-
         this.tilesRows = tileRows;
         this.drawCanvasWithTiles();
     }
@@ -562,8 +591,8 @@ class spriteCanvas {
 
     createResizeButtonAtLocation(selectedArea) {
 
-        let xcoord = ((selectedArea[0].x + 1) * this.pixelSize) + this.canvas.offsetLeft;
-        let ycoord = ((selectedArea[0].y + 1) * this.pixelSize) + this.canvas.offsetTop;
+        let xcoord = ((selectedArea[0].x) * this.pixelSize) + this.canvas.offsetLeft;
+        let ycoord = ((selectedArea[0].y) * this.pixelSize) + this.canvas.offsetTop - 30;
 
         let button = document.createElement("button");
         button.innerHTML = "Resize Sprite";
@@ -582,6 +611,37 @@ class spriteCanvas {
     }
 
 
+    addDrawingToUndoMap(drawingChanges) {
+        if(drawingChanges.size > 0) {
+            if (this.undoStack.length >= 10) {
+                this.undoStack.pop(); // undo limit set to 5 for some reason
+            }
+            this.undoStack.unshift(drawingChanges)
+        }
+    }
+
+    undoLastAction() {
+        if(this.undoStack.length>0) {
+            let actionToUndo = this.undoStack.shift();
+
+            this.resetTilesBackToPreviousColors(actionToUndo)
+
+            this.drawListOfTiles(Array.from(actionToUndo.keys()));
+        }
+    }
+
+    resetTilesBackToPreviousColors(mapOfTilesToReset) {
+        for (const [key, value] of mapOfTilesToReset.entries()) {
+            key.color = value[0];
+            key.transparency = value[1];
+        }
+    }
+
+    addTileToDrawingChanges(tile) {
+        if (!this.drawingChanges.has(tile)) {
+            this.drawingChanges.set(tile, [tile.color, tile.transparency]);
+        }
+    }
 }
 
 class spriteCanvasTile {

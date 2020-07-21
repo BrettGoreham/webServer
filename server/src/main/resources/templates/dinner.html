@@ -186,8 +186,8 @@
         }
 
         function filterCategoriesWithNoOptions(listOfGridItems) {
-            var filtered = [];
-            for (var i = 0; i < listOfGridItems.length; i++) {
+            const filtered = [];
+            for (let i = 0; i < listOfGridItems.length; i++) {
                 if (listOfGridItems[i].querySelectorAll(".list-item:not(.disabled)").length > 0) {
                     filtered.push(listOfGridItems[i]);
                 }
@@ -196,13 +196,13 @@
         }
 
         function reset() {
-            var allMealCateogries = document.querySelectorAll( '.grid-item:not(.disabled)' );
-            for (var i = 0; i < allMealCateogries.length; i++) {
-                makeElementUnselected(allMealCateogries[i], "#83b2f3");
+            const allMealCategories = document.querySelectorAll('.grid-item:not(.disabled)');
+            for (let i = 0; i < allMealCategories.length; i++) {
+                makeElementUnselected(allMealCategories[i], "#83b2f3");
             }
 
-            var allMealOptions = document.querySelectorAll( '.list-item:not(.disabled)' );
-            for (i = 0; i < allMealOptions.length; i++) {
+            const allMealOptions = document.querySelectorAll( '.list-item:not(.disabled)' );
+            for (let i = 0; i < allMealOptions.length; i++) {
                 makeElementUnselected(allMealOptions[i], "#00E1EF");
             }
         }
@@ -215,7 +215,7 @@
 
             var selected = Math.floor(Math.random() * listOfElements.length);
 
-            if (numberOfRandomLeftSelects == 1) {
+            if (numberOfRandomLeftSelects === 1) {
                 finishMealCategory(listOfElements[selected]);
             }
             else {

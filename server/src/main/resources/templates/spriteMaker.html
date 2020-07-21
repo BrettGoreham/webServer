@@ -63,15 +63,15 @@
         <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
     </div>
 
-    <div style="margin-top: 10px">
-        <input type="file" name="import" id="import" onchange="importImage()">
+    <div style="margin-top: 10px; margin-bottom: 10px">
+        <input type="file" name="import" id="import" onchange="importImage()" accept=".png">
         <a id="download" onclick="startDownload()" download="sprite">download as Png</a>
     </div>
 
 
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
     <script>
-        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15, "#FFFFFF");
+        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15, "#ffffff");
         spriteCanvasObject.setAttachedColorSelector(document.getElementById("colorSelector"));
 
         function updateColorSelected(color) {
@@ -91,13 +91,11 @@
             let aTag = document.getElementById("download");
 
             let pngDataUrl = spriteCanvasObject.getPngDataUrlOfSprite();
-            console.log(pngDataUrl);
             aTag.href = pngDataUrl;
         }
 
         function importImage() {
             let image = document.getElementById("import")
-            console.log(image);
 
             let file = image.files[0];
             let reader = new FileReader();
@@ -134,15 +132,15 @@
 
         transparencyChange();
         function transparencyChange() {
-            let transparency = document.getElementById("transparency");
+            let transparency = parseInt(document.getElementById("transparency").value, 10);
 
-            if(transparency.value < 0) {
-                transparency.value = 0;
-            } else if (transparency.value > 255) {
-                transparency.value = 255;
+            if(transparency < 0) {
+                transparency = 0;
+            } else if (transparency > 255) {
+                transparency = 255;
             }
 
-            spriteCanvasObject.setTransparency(transparency.value);
+            spriteCanvasObject.setTransparency(transparency);
         }
 
     </script>
