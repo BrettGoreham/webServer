@@ -158,8 +158,8 @@ class spriteCanvas {
 
         for (let y = 0; y < yTilesToCopy; y++) {
             for (let x = 0; x < xTilesToCopy; x++) {
-                newTiles[x][y].color = this.tilesRows[yStart + y][xStart + x].color;
-                newTiles[x][y].transparency = this.tilesRows[yStart + y][xStart + x].transparency;
+                newTiles[y][x].color = this.tilesRows[yStart + y][xStart + x].color;
+                newTiles[y][x].transparency = this.tilesRows[yStart + y][xStart + x].transparency;
             }
         }
 
