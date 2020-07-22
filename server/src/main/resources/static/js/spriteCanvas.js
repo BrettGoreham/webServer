@@ -46,6 +46,7 @@ class spriteCanvas {
                 }
                 else if (this.mode === "colorPicker") {
                     this.selectColorAt(gridPositionOfClick);
+                    this.endDrawing();
                 }
                 else if (this.mode === "line") {
                     this.startLineAt(gridPositionOfClick);
@@ -152,16 +153,21 @@ class spriteCanvas {
     }
 
     resizeCanvasToNewSize(xStart, yStart, newWidth, newHeight) {
+        this.addCurrentStateToChangeHistory();
+
         let oldWidth = this.widthInPixels;
         let oldHeight = this.heightInPixels;
 
         this.widthInPixels = newWidth;
         this.heightInPixels = newHeight;
 
+        this.dispatchCanvasResizeEvent();
+
         this.canvas.width = newWidth * this.pixelSize;
         this.canvas.height = newHeight * this.pixelSize;
 
         let newTiles = this.createTiles();
+        //important to create new tiles so we can undo action easier
 
         let xTilesToCopy = Math.min(oldWidth - xStart, this.widthInPixels);
         let yTilesToCopy = Math.min(oldHeight - yStart, this.heightInPixels);
@@ -179,9 +185,7 @@ class spriteCanvas {
     }
 
     endDrawing() {
-        this.addDrawingToUndoMap(this.drawingChanges);
-
-        this.drawingChanges = new Map();
+        this.addDrawingChangesToUndoMap(false);
 
         this.isDrawing = false;
         this.startOfSegmentX = null;
@@ -189,9 +193,6 @@ class spriteCanvas {
         this.lastTrackedPosition = null;
     }
 
-    setAttachedColorSelector(colorSelector) {
-        this.colorSelector = colorSelector;
-    }
     /** valid modes currently: draw, fill, colorPicker, line */
     setMode(mode) {
         this.mode = mode;
@@ -366,8 +367,21 @@ class spriteCanvas {
     }
 
     selectColorAt(gridLocation) {
-        this.colorSelector.value = this.tilesRows[gridLocation.y][gridLocation.x].color;
-        this.selectedColor = this.colorSelector.value;
+        let tile = this.tilesRows[gridLocation.y][gridLocation.x];
+
+        if (tile.color !==this.selectedColor || tile.transparency !== this.transparency) {
+            this.drawingChanges.set("color", this.selectedColor);
+            this.drawingChanges.set("transparency", this.transparency)
+
+            this.changeColorAndTransparencyAndDispatchEvent(tile.color, tile.transparency);
+        }
+    }
+
+    changeColorAndTransparencyAndDispatchEvent(color, transparency){
+        this.selectedColor = color
+        this.transparency = transparency;
+
+        this.canvas.dispatchEvent(new CustomEvent('colorChange'));
     }
 
 
@@ -548,21 +562,30 @@ class spriteCanvas {
 
     importImageFromPngIntoTileCanvas(image) {
         let img = document.createElement("img");
-        img.onload = () => this.getImageData(img);
+        //document.body.appendChild(img);
         img.src = image;
+
+        img.onload = () => this.getImageData(img);
+
     }
 
     getImageData(image) {
+        this.addCurrentStateToChangeHistory();
+
         let importImageCanvas = document.createElement("canvas");
         let importImageContext = importImageCanvas.getContext("2d");
         importImageContext.drawImage(image,0,0);
 
-        let imageData = importImageContext.getImageData(0,0,image.width, image.height);
+        let imageData = importImageContext.getImageData(0,0, image.width, image.height);
 
-        this.widthInPixels = image.width;
-        this.heightInPixels = image.height;
+
+        this.widthInPixels = imageData.width;
+        this.heightInPixels = imageData.height;
         this.canvas.width = this.widthInPixels * this.pixelSize;
         this.canvas.height = this.heightInPixels * this.pixelSize;
+
+        console.log("image data: " + imageData.data.length );
+        console.log("image data width and height " +  imageData.width + "  " + imageData.height);
 
         let imageDataCursor = 0; // used to keep track of where we are in the image data datafield
         let tileRows = [];
@@ -584,10 +607,14 @@ class spriteCanvas {
             tileRows.push(tileRow);
         }
 
+        this.dispatchCanvasResizeEvent()
         this.tilesRows = tileRows;
         this.drawCanvasWithTiles();
     }
 
+    dispatchCanvasResizeEvent() {
+        this.canvas.dispatchEvent(new CustomEvent('canvasDimensionChange'));
+    }
 
     createResizeButtonAtLocation(selectedArea) {
 
@@ -611,22 +638,50 @@ class spriteCanvas {
     }
 
 
-    addDrawingToUndoMap(drawingChanges) {
-        if(drawingChanges.size > 0) {
-            if (this.undoStack.length >= 10) {
-                this.undoStack.pop(); // undo limit set to 5 for some reason
+    addDrawingChangesToUndoMap(resize) {
+        if (this.drawingChanges.size > 0) {
+            if (this.undoStack.length >= 15) {
+                this.undoStack.pop(); // undo limit set to 10 for some reason
             }
-            this.undoStack.unshift(drawingChanges)
+            let action;
+            if (resize) {
+                action = "spriteResize";
+            }
+            else {
+                action = this.mode;
+            }
+            this.undoStack.unshift([action, this.drawingChanges])
+
+            this.drawingChanges = new Map();
         }
     }
 
     undoLastAction() {
-        if(this.undoStack.length>0) {
-            let actionToUndo = this.undoStack.shift();
+        if (this.undoStack.length>0) {
+            let undo = this.undoStack.shift();
+            let actionToUndo = undo[0];
+            let payloadToUndo = undo[1];
 
-            this.resetTilesBackToPreviousColors(actionToUndo)
+            if (actionToUndo === "draw" || actionToUndo === "line" || actionToUndo === "fill") {
+                this.resetTilesBackToPreviousColors(payloadToUndo)
+                this.drawListOfTiles(Array.from(payloadToUndo.keys()));
+            }
+            else if (actionToUndo === "colorPicker") {
+                this.changeColorAndTransparencyAndDispatchEvent(
+                    payloadToUndo.get("color"),
+                    payloadToUndo.get("transparency")
+                );
+            }
+            else if (actionToUndo === "spriteResize") {
+                this.heightInPixels = payloadToUndo.get("height");
+                this.widthInPixels = payloadToUndo.get("width");
+                this.tilesRows = payloadToUndo.get("tiles");
 
-            this.drawListOfTiles(Array.from(actionToUndo.keys()));
+                this.canvas.width = this.widthInPixels * this.pixelSize;
+                this.canvas.height = this.heightInPixels * this.pixelSize;
+                this.drawCanvasWithTiles();
+                this.dispatchCanvasResizeEvent();
+            }
         }
     }
 
@@ -641,6 +696,14 @@ class spriteCanvas {
         if (!this.drawingChanges.has(tile)) {
             this.drawingChanges.set(tile, [tile.color, tile.transparency]);
         }
+    }
+
+    addCurrentStateToChangeHistory() {
+        this.drawingChanges.set("height", this.heightInPixels);
+        this.drawingChanges.set("width", this.widthInPixels);
+        this.drawingChanges.set("tiles", this.tilesRows);
+
+        this.addDrawingChangesToUndoMap(true);
     }
 }
 

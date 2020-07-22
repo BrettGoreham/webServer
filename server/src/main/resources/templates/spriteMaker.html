@@ -72,7 +72,19 @@
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
     <script>
         let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15, "#ffffff");
-        spriteCanvasObject.setAttachedColorSelector(document.getElementById("colorSelector"));
+
+        document.getElementById("spriteCanvas").addEventListener('colorChange', registerInCanvasColorChange);
+        document.getElementById("spriteCanvas").addEventListener('canvasDimensionChange', registerCanvasSizeChange);
+
+        function registerCanvasSizeChange() {
+            document.getElementById("width").value = spriteCanvasObject.widthInPixels;
+            document.getElementById("height").value = spriteCanvasObject.heightInPixels;
+        }
+
+        function registerInCanvasColorChange() {
+            document.getElementById("colorSelector").value = spriteCanvasObject.selectedColor;
+            document.getElementById("transparency").value = spriteCanvasObject.transparency;
+        }
 
         function updateColorSelected(color) {
             spriteCanvasObject.selectedColor = color;
@@ -119,7 +131,7 @@
         resetToCurrentSpriteSize();
 
         function resizeSprite() {
-            if(widthText.value !== spriteCanvasObject.widthInPixels
+            if (widthText.value !== spriteCanvasObject.widthInPixels
                || heightText.value !== spriteCanvasObject.heightInPixels) {
                 spriteCanvasObject.resizeCanvasToNewSize(0,0, widthText.value, heightText.value);
             }
