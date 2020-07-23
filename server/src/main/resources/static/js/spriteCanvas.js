@@ -573,19 +573,19 @@ class spriteCanvas {
         this.addCurrentStateToChangeHistory();
 
         let importImageCanvas = document.createElement("canvas");
+
+        importImageCanvas.width = image.width; //discovered this was important
+        importImageCanvas.height = image.height;
+
         let importImageContext = importImageCanvas.getContext("2d");
         importImageContext.drawImage(image,0,0);
 
         let imageData = importImageContext.getImageData(0,0, image.width, image.height);
 
-
         this.widthInPixels = imageData.width;
         this.heightInPixels = imageData.height;
         this.canvas.width = this.widthInPixels * this.pixelSize;
         this.canvas.height = this.heightInPixels * this.pixelSize;
-
-        console.log("image data: " + imageData.data.length );
-        console.log("image data width and height " +  imageData.width + "  " + imageData.height);
 
         let imageDataCursor = 0; // used to keep track of where we are in the image data datafield
         let tileRows = [];
@@ -609,6 +609,7 @@ class spriteCanvas {
 
         this.dispatchCanvasResizeEvent()
         this.tilesRows = tileRows;
+
         this.drawCanvasWithTiles();
     }
 
@@ -636,7 +637,6 @@ class spriteCanvas {
 
         this.resizeButton = button;
     }
-
 
     addDrawingChangesToUndoMap(resize) {
         if (this.drawingChanges.size > 0) {
