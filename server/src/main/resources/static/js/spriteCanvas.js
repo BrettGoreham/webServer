@@ -28,6 +28,7 @@ class spriteCanvas {
 
         this.startOfSegmentX = null; // these are used for drawing lines.
         this.startOfSegmentY = null;
+        this.dispatchUndoAvailabilityEvent(false);
 
         // Add the event listeners for mousedown, mousemove, mouseup, mouseout.
         this.canvas.addEventListener('mousedown', e => {
@@ -46,7 +47,6 @@ class spriteCanvas {
                 }
                 else if (this.mode === "colorPicker") {
                     this.selectColorAt(gridPositionOfClick);
-                    this.endDrawing();
                 }
                 else if (this.mode === "line") {
                     this.startLineAt(gridPositionOfClick);
@@ -185,7 +185,7 @@ class spriteCanvas {
     }
 
     endDrawing() {
-        this.addDrawingChangesToUndoMap(false);
+        this.addDrawingChangesToUndoMap();
 
         this.isDrawing = false;
         this.startOfSegmentX = null;
@@ -369,11 +369,17 @@ class spriteCanvas {
     selectColorAt(gridLocation) {
         let tile = this.tilesRows[gridLocation.y][gridLocation.x];
 
-        if (tile.color !==this.selectedColor || tile.transparency !== this.transparency) {
+        this.updateColorAndTransparency(tile.color, tile.transparency);
+    }
+
+    updateColorAndTransparency(color, transparency) {
+        if (color !== this.selectedColor || transparency !== this.transparency) {
             this.drawingChanges.set("color", this.selectedColor);
             this.drawingChanges.set("transparency", this.transparency)
 
-            this.changeColorAndTransparencyAndDispatchEvent(tile.color, tile.transparency);
+            this.addDrawingChangesToUndoMap("colorPicker");
+
+            this.changeColorAndTransparencyAndDispatchEvent(color, transparency);
         }
     }
 
@@ -617,6 +623,14 @@ class spriteCanvas {
         this.canvas.dispatchEvent(new CustomEvent('canvasDimensionChange'));
     }
 
+    dispatchUndoAvailabilityEvent(available) {
+        if (available) {
+            this.canvas.dispatchEvent(new CustomEvent('undoAvailability', {detail: true }));
+        } else {
+            this.canvas.dispatchEvent(new CustomEvent('undoAvailability', {detail: false }));
+        }
+    }
+
     createResizeButtonAtLocation(selectedArea) {
 
         let xcoord = ((selectedArea[0].x) * this.pixelSize) + this.canvas.offsetLeft;
@@ -638,14 +652,17 @@ class spriteCanvas {
         this.resizeButton = button;
     }
 
-    addDrawingChangesToUndoMap(resize) {
+    addDrawingChangesToUndoMap(actionOverride) {
         if (this.drawingChanges.size > 0) {
-            if (this.undoStack.length >= 15) {
+            if (this.undoStack.length === 0) {
+                this.dispatchUndoAvailabilityEvent(true);
+            }
+            else if (this.undoStack.length >= 15) {
                 this.undoStack.pop(); // undo limit set to 10 for some reason
             }
             let action;
-            if (resize) {
-                action = "spriteResize";
+            if (actionOverride) {
+                action = actionOverride;
             }
             else {
                 action = this.mode;
@@ -658,6 +675,10 @@ class spriteCanvas {
 
     undoLastAction() {
         if (this.undoStack.length>0) {
+            if (this.undoStack.length === 1) {
+               this.dispatchUndoAvailabilityEvent(false);
+            }
+
             let undo = this.undoStack.shift();
             let actionToUndo = undo[0];
             let payloadToUndo = undo[1];
@@ -703,7 +724,7 @@ class spriteCanvas {
         this.drawingChanges.set("width", this.widthInPixels);
         this.drawingChanges.set("tiles", this.tilesRows);
 
-        this.addDrawingChangesToUndoMap(true);
+        this.addDrawingChangesToUndoMap("spriteResize");
     }
 }
 

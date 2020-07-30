@@ -37,9 +37,9 @@
 
     <div>
         <label>Currently Selected Color:  </label>
-        <input id="colorSelector" type="color" value="#ff0000" onchange="updateColorSelected(this.value)">
+        <input id="colorSelector" type="color" value="#ff0000" onchange="colorOrTransparencyChange()">
         <label>  Transparency:  </label>
-        <input type="range" id="transparency" max="255" min="0" value="255" onchange="transparencyChange()">
+        <input type="range" id="transparency" max="255" min="0" value="255" onchange="colorOrTransparencyChange()">
 
     </div>
     <div>
@@ -58,6 +58,7 @@
         <label>
             <input type="radio" name="mode" value="selectArea"> Select Area
         </label>
+        <button id="undoButton" onclick="undoLastDrawingChange()">undo</button>
     </div>
     <div style="margin-top: 20px">
         <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
@@ -71,10 +72,11 @@
 
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
     <script>
-        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15, "#ffffff");
-
         document.getElementById("spriteCanvas").addEventListener('colorChange', registerInCanvasColorChange);
         document.getElementById("spriteCanvas").addEventListener('canvasDimensionChange', registerCanvasSizeChange);
+        document.getElementById("spriteCanvas").addEventListener('undoAvailability', e => registerUndoAvailability(e));
+
+        let spriteCanvasObject = new spriteCanvas("spriteCanvas", 32, 32, 15, "#ffffff");
 
         function registerCanvasSizeChange() {
             document.getElementById("width").value = spriteCanvasObject.widthInPixels;
@@ -86,8 +88,12 @@
             document.getElementById("transparency").value = spriteCanvasObject.transparency;
         }
 
-        function updateColorSelected(color) {
-            spriteCanvasObject.selectedColor = color;
+        function registerUndoAvailability(event) {
+            document.getElementById("undoButton").disabled = !event.detail; //made event be true if enabled oops
+        }
+
+        function undoLastDrawingChange() {
+            spriteCanvasObject.undoLastAction();
         }
 
         function keydown(keyPressed) {
@@ -142,8 +148,8 @@
             heightText.value = spriteCanvasObject.heightInPixels;
         }
 
-        transparencyChange();
-        function transparencyChange() {
+        colorOrTransparencyChange();
+        function colorOrTransparencyChange() {
             let transparency = parseInt(document.getElementById("transparency").value, 10);
 
             if(transparency < 0) {
@@ -152,7 +158,9 @@
                 transparency = 255;
             }
 
-            spriteCanvasObject.setTransparency(transparency);
+            let color = document.getElementById("colorSelector").value;
+
+            spriteCanvasObject.updateColorAndTransparency(color, transparency);
         }
 
     </script>
