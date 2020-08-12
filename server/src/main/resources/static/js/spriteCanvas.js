@@ -310,7 +310,7 @@ class spriteCanvas {
     }
 
     checkIfTileNeedsToBeChangedAndAddToChangeList(tile, changesToDraw) {
-        if (tile.color !==this.selectedColor || tile.transparency !== this.transparency) {
+        if (tile.color !== this.selectedColor || tile.transparency !== this.transparency) {
             this.addTileToDrawingChanges(tile);
             tile.color = this.selectedColor;
             tile.transparency = this.transparency;
@@ -322,48 +322,50 @@ class spriteCanvas {
     canvasFillFromPosition(gridLocation) {
         let startTile = this.tilesRows[gridLocation.y][gridLocation.x];
 
-        let colorToFill = startTile.color;
-        let transparencyToFill = startTile.transparency;
+        if (startTile.color !== this.selectedColor || startTile.transparency !== this.transparency) {
+            let colorToFill = startTile.color;
+            let transparencyToFill = startTile.transparency;
 
-        let tilesToColor = [startTile];
-        let visitedTiles = new Map(); //this is tiles + value if they needed to be coloured or not.
+            let tilesToColor = [startTile];
+            let visitedTiles = new Map(); //this is tiles + value if they needed to be coloured or not.
 
-        // this will give the tiles directly surrounding this tile.
-        let transformations = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        while(tilesToColor.length > 0) {
-            let tileToVisit = tilesToColor.pop();
+            // this will give the tiles directly surrounding this tile.
+            let transformations = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            while(tilesToColor.length > 0) {
+                let tileToVisit = tilesToColor.pop();
 
-            this.addTileToDrawingChanges(tileToVisit);
+                this.addTileToDrawingChanges(tileToVisit);
 
-            tileToVisit.color = this.selectedColor;
-            tileToVisit.transparency = this.transparency;
+                tileToVisit.color = this.selectedColor;
+                tileToVisit.transparency = this.transparency;
 
-            transformations.forEach((transformation) => {
-                let x = tileToVisit.xStart + transformation[0];
-                let y = tileToVisit.yStart + transformation[1];
+                transformations.forEach((transformation) => {
+                    let x = tileToVisit.xStart + transformation[0];
+                    let y = tileToVisit.yStart + transformation[1];
 
-                if (this.isCoordinateInCanvas(x,y)) {
-                    let potentialTileToVisit = this.tilesRows[y][x];
+                    if (this.isCoordinateInCanvas(x,y)) {
+                        let potentialTileToVisit = this.tilesRows[y][x];
 
-                    if (!visitedTiles.has(potentialTileToVisit)) {
+                        if (!visitedTiles.has(potentialTileToVisit)) {
 
-                        if (potentialTileToVisit.color === colorToFill
-                            && potentialTileToVisit.transparency === transparencyToFill) {
-                            visitedTiles.set(potentialTileToVisit, true);
-                            tilesToColor.push(potentialTileToVisit);
-                        }
-                        else {
-                            visitedTiles.set(potentialTileToVisit, false);
+                            if (potentialTileToVisit.color === colorToFill
+                                && potentialTileToVisit.transparency === transparencyToFill) {
+                                visitedTiles.set(potentialTileToVisit, true);
+                                tilesToColor.push(potentialTileToVisit);
+                            }
+                            else {
+                                visitedTiles.set(potentialTileToVisit, false);
+                            }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        // for this action we can just draw directly from the changes as its a one click and done
-        this.drawListOfTiles(
-            Array.from(this.drawingChanges.keys())
-        );
+            // for this action we can just draw directly from the changes as its a one click and done
+            this.drawListOfTiles(
+                Array.from(this.drawingChanges.keys())
+            );
+        }
     }
 
     selectColorAt(gridLocation) {
