@@ -1,0 +1,94 @@
+/**/:root {
+    --main-bg-color: #121212;
+    --main-light-color: #343434;
+    --main-neutral-color: #666666;
+    --main-highlight-color: #ffe082;
+    --main-highlight-text-color: #4d7d42;
+    --main-text-color: #abdf9d;
+
+}/**/
+/*:root {
+        --main-text-color: #240B36;
+        --main-bg-color: #6B717E;
+        --main-highlight-color: #FB3640;
+        --main-neutral-color: #CCDAD1;
+        --main-light-color: #018E42;
+}/**/
+html {
+    height: 100%;
+}
+
+body {
+    background-color: var(--main-bg-color);
+    /*width: 100%;*/
+    max-width: 100%;
+    /*min-height: 100%;*/
+}
+/* apparently this changes color text all over so remember this fact */
+* {
+    color: var(--main-text-color);
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5
+{
+    text-align: center;
+    /*font-weight: bolder;*/
+}
+
+form {
+    border-radius: 5px;
+    background-color: var(--main-light-color);
+    padding: 15px;
+    margin: 30px;
+}
+form input, select{
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    background-color: var(--main-neutral-color);
+}
+
+button, form input[type=button], input[type=submit], input[type=reset] {
+    width: 100%;
+    background-color: var(--main-highlight-color);
+    border: none;
+    border-radius: 5px;
+    color: var(--main-highlight-text-color);
+    padding: 16px 32px;
+    text-decoration: none;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+form input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover {
+    opacity: 0.8;
+}
+
+ul {
+    list-style: none;/*no thank you bullet man*/
+    border-radius: 5px;
+    background-color: var(--main-light-color);
+    padding: 15px;
+    margin: 30px;
+}
+
+li {
+    background-color: var(--main-neutral-color);
+    text-align: center;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border-radius: 5px;
+}
+
+
+.formHider {
+    height: 0px;
+    overflow:hidden;
+    transition: height 0.4s ease-in-out;
+}

@@ -70,7 +70,7 @@ public class WordsContainingLettersService {
         return possibleWordSets
             .stream()
             .flatMap(wordSet -> wordSet.getWordsInSet().stream())
-            .sorted(Comparator.comparing(String::length))
+            .sorted( (o1,o2) -> -1 * Integer.compare(o1.length(), o2.length()))
             .collect(Collectors.toList());
     }
 

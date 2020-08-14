@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<div th:fragment="wordSearchForm">
+    <form  id="findWords" th:action="@{/words/find}" method="get" >
+        <label for="language">Language: </label>
+        <select required name="language" id="language" form="findWords">
+            <option selected="selected" value="en">English</option>
+        </select>
+
+        <label for="input">Characters list</label>
+        <input type="text" maxlength="20" name="input" id="input">
+
+        <label for="minLength">Minimum Length of found words</label>
+        <input type="number" name="minLength" id="minLength" value="1" min="1" max="25">
+
+        <input type="submit" value="Submit">
+    </form>
+</div>
+</body>
+
+</html>
+

@@ -6,12 +6,14 @@ import java.util.Optional;
 
 public enum LanguageCharacterSet {
 
-    ENGLISH("en",'a','b','c','d','e','f','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z');
+    ENGLISH("en","English", 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z');
 
     private final String langCode;
+    private final String fullName;
     private final List<Character> characterSet;
-    LanguageCharacterSet(String langCode, Character... characterSet) {
+    LanguageCharacterSet(String langCode, String fullName, Character... characterSet) {
         this.langCode = langCode;
+        this.fullName = fullName;
         this.characterSet = Arrays.asList(characterSet);
     }
 
@@ -22,6 +24,9 @@ public enum LanguageCharacterSet {
     public String getLangCode() {
         return langCode;
     }
+
+    public String getFullName() {return fullName;}
+
 
     public static Optional<LanguageCharacterSet> getLanguageCharacterSetFromLanguageCode(String langCode) {
         return Arrays.stream(LanguageCharacterSet.values())

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}"/>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<h3>Word Search Result</h3>
+
+<button onclick="toggle(this)" >Search Again</button>
+<div id="searchForm" th:insert="~{words/searchForm :: wordSearchForm}" class="formHider">
+</div>
+
+<h4 th:text="'Results with: ' + ${language} + ', ' + ${input} + ', ' + ${minLength}"></h4>
+
+<ul>
+ <li th:each="word : ${words}" th:text="${word}"></li>
+</ul>
+
+
+<script>
+    function toggle(button) {
+        let searchFormDiv = document.getElementById("searchForm");
+        if (searchFormDiv.style.height === "0px" || searchFormDiv.style.height === "") {
+            searchFormDiv.style.height = searchFormDiv.scrollHeight + 'px'; //auto doesnt work blame css
+            button.innerHTML = "Hide";
+        } else {
+            searchFormDiv.style.height = "0px";
+            button.innerHTML = "Search Again";
+        }
+    }
+</script>
+</body>
+</html>
