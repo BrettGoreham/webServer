@@ -72,6 +72,7 @@ form input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover
 
 ul {
     list-style: none;/*no thank you bullet man*/
+    display: inline-block;
     border-radius: 5px;
     background-color: var(--main-light-color);
     padding: 15px;
@@ -91,4 +92,10 @@ li {
     height: 0px;
     overflow:hidden;
     transition: height 0.4s ease-in-out;
+}
+
+.autoColumnGrid {
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }

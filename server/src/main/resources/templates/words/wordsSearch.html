@@ -14,10 +14,13 @@
 </div>
 
 <h4 th:text="'Results with: ' + ${language} + ', ' + ${input} + ', ' + ${minLength}"></h4>
+<div class="autoColumnGrid">
+    <ul th:each="groupOfWords : ${words}">
+        <h5 th:text="'Length of ' + ${groupOfWords.get(0).length()}"></h5>
+        <li th:each="word : ${groupOfWords}" th:text="${word}"></li>
+    </ul>
 
-<ul>
- <li th:each="word : ${words}" th:text="${word}"></li>
-</ul>
+</div>
 
 
 <script>
