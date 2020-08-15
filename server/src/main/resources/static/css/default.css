@@ -81,6 +81,7 @@ ul {
 
 li {
     background-color: var(--main-neutral-color);
+    display: inline-block;
     text-align: center;
     padding: 12px 20px;
     margin: 8px 0;
