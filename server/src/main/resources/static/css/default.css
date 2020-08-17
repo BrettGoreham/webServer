@@ -30,6 +30,7 @@ footer {
     background-color: var(--main-highlight-color);
     padding: 10px;
     max-height: 40px;
+    height: 40px;
 }
 /* apparently this changes color text all over so remember this fact */
 * {
@@ -119,15 +120,11 @@ div .darkDiv{
     margin: 0px; /*not sure why this is needed but wihtout it page is too tall*/
 }
 
-.fillImage {
-    max-height: 100%;
-    margin-right: 20px;
-    margin-left: 20px;
-}
 
 .containImage {
     object-fit: scale-down;
     max-height: 100%;
+    max-width: 100%;
     margin-right: 20px;
     margin-left: 20px;
 }
