@@ -4,7 +4,8 @@
     --main-neutral-color: #666666;
     --main-highlight-color: #ffe082;
     --main-highlight-text-color: #4d7d42;
-    --main-text-color: #abdf9d;
+    --main-text-color: #EEEEEE;
+    --main-secondary-color: #abdf9d;
 
 }/**/
 /*:root {
@@ -23,6 +24,12 @@ body {
     /*width: 100%;*/
     max-width: 100%;
     /*min-height: 100%;*/
+}
+footer {
+    text-align: center;
+    background-color: var(--main-highlight-color);
+    padding: 10px;
+    max-height: 40px;
 }
 /* apparently this changes color text all over so remember this fact */
 * {
@@ -70,18 +77,17 @@ form input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover
     opacity: 0.8;
 }
 
-ul {
-    list-style: none;/*no thank you bullet man*/
-    display: inline-block;
+div .borderedDiv {
+    background-color: var(--main-neutral-color);
+    border: 1px solid var(--main-secondary-color);
+    text-align: center;
+    padding: 12px 20px;
+    margin: 8px 0;
     border-radius: 5px;
-    background-color: var(--main-light-color);
-    padding: 15px;
-    margin: 30px;
 }
 
-li {
-    background-color: var(--main-neutral-color);
-    display: inline-block;
+div .darkDiv{
+    background-color: var(--main-light-color);
     text-align: center;
     padding: 12px 20px;
     margin: 8px 0;
@@ -99,4 +105,29 @@ li {
     display: grid;
     grid-gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.autoSmallColumnGrid {
+    display: grid;
+    grid-gap: 3px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+.headerFooterPage {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+    margin: 0px; /*not sure why this is needed but wihtout it page is too tall*/
+}
+
+.fillImage {
+    max-height: 100%;
+    margin-right: 20px;
+    margin-left: 20px;
+}
+
+.containImage {
+    object-fit: scale-down;
+    max-height: 100%;
+    margin-right: 20px;
+    margin-left: 20px;
 }

@@ -36,18 +36,31 @@ public class WordsContainingLettersServlet {
                                 .stream()
                                 .collect(
                                     Collectors.groupingBy(
-                                        String::length, HashMap::new, Collectors.toList())
+                                        a -> a.replaceAll("'", "").length(),
+                                        HashMap::new,
+                                        Collectors.toList())
                                 )
                                 .values());
 
         // sort groups by the size want list of longer words first
-        groupedWords.sort((lista, listb) -> Integer.compare(listb.get(0).length(),lista.get(0).length()));
+        groupedWords.sort(
+            (lista, listb) ->
+                Integer.compare(
+                    listb.get(0).replaceAll("'", "").length(),
+                    lista.get(0).replaceAll("'", "").length()
+                )
+        );
+
+        for(List<String> wordsInGroup : groupedWords) {
+            wordsInGroup.sort(
+                Comparator.comparing(stringA -> stringA.replace("'", ""))
+                );
+        }
 
         model.addAttribute("language", LanguageCharacterSet.getLanguageCharacterSetFromLanguageCode(language).get().getFullName());
         model.addAttribute("input", input);
         model.addAttribute("minLength", minLength);
         model.addAttribute("words", groupedWords);
-
 
         return "words/wordsSearch";
     }
@@ -55,8 +68,7 @@ public class WordsContainingLettersServlet {
     @GetMapping(path = "findcombos")
     public String getCombosOfWords(@RequestParam String language, @RequestParam String input, @RequestParam(defaultValue = "0") int minLength, @RequestParam(defaultValue = "50") int expectedResultSize) {
         List<List<String>> words = wordsContainingLettersService.findWordCombinationsPossibleWithInputSequence(language, input, minLength, expectedResultSize);
-
-
+        
         return "words/wordsLanding";
     }
 }
