@@ -8,11 +8,16 @@
     <form  id="findWords" th:action="@{/words/find}" method="get" >
         <label for="language">Language: </label>
         <select required name="language" id="language" form="findWords">
-            <option selected="selected" value="en">English</option>
+            <!--/*@thymesVar id="language" type="model.LanguageCharacterSet"*/-->
+            <!--/*@thymesVar id="languages" type="java.util.Collection"*/-->
+            <option th:each="language : ${languages}"
+                    th:text="${language.getFullName()}"
+                    th:value="${language.getLangCode()}">
+            </option>
         </select>
 
         <label for="input">Characters list</label>
-        <input type="text" maxlength="20" name="input" id="input">
+        <input type="text" maxlength="30" name="input" id="input">
 
         <label for="minLength">Minimum Length of found words</label>
         <input type="number" name="minLength" id="minLength" value="1" min="1" max="25">

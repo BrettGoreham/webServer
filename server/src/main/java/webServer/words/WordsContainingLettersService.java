@@ -24,12 +24,11 @@ public class WordsContainingLettersService {
         LanguageCharacterSet validCharacterSet = getLanguage(language);
         validateInputForCharacterSet(validCharacterSet, input);
 
-        int[] inputRepresentation = getInputCharacterSetArrayForString(validCharacterSet, input);
+        int[] inputRepresentation = WordSet.getInputCharacterSetArrayForString(validCharacterSet, input);
 
-        List<WordSet> wordSets = createWordSetsFromWordDictionary(validCharacterSet, minLength); //combine dictionary into like words. as they are treated the same.
-        List<WordSet> baseWordSet = getPossibleWordsFromAvailableWordRepresentation(inputRepresentation, wordSets);
+        List<WordSet> baseWordSet = createWordSetsFromWordDictionary(validCharacterSet, inputRepresentation, minLength, input.length()); //combine dictionary into like words. as they are treated the same.
 
-        List<ListOfWordSetsResultSet> combinationsOfWordSetsPossible = combineBaseWordSetToMakeAllCombinationsPossible(inputRepresentation, baseWordSet);
+        List<ListOfWordSetsResultSet> combinationsOfWordSetsPossible = combineBaseWordSetToMakeAllCombinationsPossible(validCharacterSet, inputRepresentation, baseWordSet);
 
         combinationsOfWordSetsPossible.sort(Comparator.comparing(ListOfWordSetsResultSet::getOrCalculateNumberOfRemainingLetters));
         
@@ -62,10 +61,9 @@ public class WordsContainingLettersService {
         LanguageCharacterSet validCharacterSet = getLanguage(language);
         validateInputForCharacterSet(validCharacterSet, input);
 
-        int[] inputRepresentation = getInputCharacterSetArrayForString(validCharacterSet, input);
+        int[] inputRepresentation = WordSet.getInputCharacterSetArrayForString(validCharacterSet, input);
 
-        List<WordSet> wordSets = createWordSetsFromWordDictionary(validCharacterSet, minLength);
-        List<WordSet> possibleWordSets = getPossibleWordsFromAvailableWordRepresentation(inputRepresentation, wordSets);
+        List<WordSet> possibleWordSets = createWordSetsFromWordDictionary(validCharacterSet, inputRepresentation,  minLength, input.length());
 
         return possibleWordSets
             .stream()
@@ -73,9 +71,9 @@ public class WordsContainingLettersService {
             .collect(Collectors.toList());
     }
 
-    private List<ListOfWordSetsResultSet> combineBaseWordSetToMakeAllCombinationsPossible(int[] inputRepresentation, List<WordSet> baseWordSet) {
+    private List<ListOfWordSetsResultSet> combineBaseWordSetToMakeAllCombinationsPossible(LanguageCharacterSet languageCharacterSet, int[] inputRepresentation, List<WordSet> baseWordSet) {
         List<ListOfWordSetsResultSet> combinationsRemainingCharacterMap =
-                createBaseMapOfWordSetRemainingCharacterSet(inputRepresentation, baseWordSet);
+                createBaseMapOfWordSetRemainingCharacterSet(languageCharacterSet, inputRepresentation, baseWordSet);
 
         List<ListOfWordSetsResultSet> resultSet = new ArrayList<>();
 
@@ -88,7 +86,7 @@ public class WordsContainingLettersService {
                 int[] newRemainingCharacters = new int[inputRepresentation.length];
 
                 for(int i = 0; i < inputRepresentation.length; i++) {
-                    int letterAmountRemaining = wordSetsAndRemainingCombination.getRemainingCharacters()[i] - wordSet.getRepresentativeLetterArray()[i];
+                    int letterAmountRemaining = wordSetsAndRemainingCombination.getRemainingCharacters()[i] - wordSet.createOrGetRepresentativeLetterArray(languageCharacterSet)[i];
 
                     if (letterAmountRemaining >= 0) {
                         newRemainingCharacters[i] = letterAmountRemaining;
@@ -123,14 +121,14 @@ public class WordsContainingLettersService {
         return resultSet;
     }
 
-    private List<ListOfWordSetsResultSet> createBaseMapOfWordSetRemainingCharacterSet(int[] inputRepresentation, List<WordSet> baseWordSet) {
+    private List<ListOfWordSetsResultSet> createBaseMapOfWordSetRemainingCharacterSet(LanguageCharacterSet languageCharacterSet, int[] inputRepresentation, List<WordSet> baseWordSet) {
         List<ListOfWordSetsResultSet> combinationsRemainingCharacters = new ArrayList<>();
 
         for (WordSet wordSet : baseWordSet) {
             int[] remainingChars = new int[inputRepresentation.length];
 
             for(int i = 0; i<inputRepresentation.length; i++) {
-                remainingChars[i] = inputRepresentation[i] - wordSet.getRepresentativeLetterArray()[i];
+                remainingChars[i] = inputRepresentation[i] - wordSet.createOrGetRepresentativeLetterArray(languageCharacterSet)[i];
             }
 
             combinationsRemainingCharacters.add(new ListOfWordSetsResultSet(List.of(wordSet), remainingChars));
@@ -140,14 +138,14 @@ public class WordsContainingLettersService {
 
     }
 
-    private List<WordSet> createWordSetsFromWordDictionary(LanguageCharacterSet languageCharacterSet, int minLength) {
+    private List<WordSet> createWordSetsFromWordDictionary(LanguageCharacterSet languageCharacterSet, int[] inputRepresentation, int minLength, int maxLength) {
         List<WordSet> wordSets = new ArrayList<>();
 
-        List<String> words = wordSetDao.getWordsForLanguage(languageCharacterSet, minLength);
+        List<String> words = wordSetDao.getWordsForLanguage(languageCharacterSet, minLength, maxLength);
 
         for (String word : words) {
             //apostrophes need to be ignored as they are not part of spelling.
-            String wordWithoutApostrophes = word.toLowerCase().replaceAll("'", "");
+            String wordWithoutApostrophes = word.toLowerCase().replace("'", "");
 
             char[] ar = wordWithoutApostrophes.toCharArray();
             Arrays.sort(ar);
@@ -161,51 +159,29 @@ public class WordsContainingLettersService {
                 existingWordSet.get().getWordsInSet().add(word);
             }
             else {
-                wordSets.add(
-                    new WordSet(
-                        sorted,
-                        getInputCharacterSetArrayForString(languageCharacterSet, sorted),
-                        word
-                    )
+                WordSet potentialWordSet = new WordSet(
+                    sorted,
+                    word
                 );
+
+                if(isWordPossible(languageCharacterSet, potentialWordSet, inputRepresentation)) {
+                    wordSets.add(potentialWordSet);
+                }
             }
         }
+
         return wordSets;
     }
 
-    private List<WordSet> getPossibleWordsFromAvailableWordRepresentation(
-            int[] inputRepresentation,
-            List<WordSet> wordSets) {
-
-        List<WordSet> possibleWordSets = new ArrayList<>();
-        for (WordSet wordSet :  wordSets) {
-
-            boolean isWordPossible = true;
-            int[] wordRepresentation = wordSet.getRepresentativeLetterArray();
-            for (int i =0; i < wordRepresentation.length ; i++) {
-                if (inputRepresentation[i] - wordRepresentation[i] < 0) {
-                    isWordPossible = false;
-                    break;
-                }
-            }
-            if (isWordPossible) {
-                possibleWordSets.add(wordSet);
+    private boolean isWordPossible(LanguageCharacterSet languageCharacterSet, WordSet potentialWordSet, int[] inputRepresentation) {
+        int[] wordRepresentation = potentialWordSet.createOrGetRepresentativeLetterArray(languageCharacterSet);
+        for (int i =0; i < wordRepresentation.length ; i++) {
+            if (inputRepresentation[i] - wordRepresentation[i] < 0) {
+                return false;
             }
         }
-        return possibleWordSets;
-    }
 
-    private int[] getInputCharacterSetArrayForString(LanguageCharacterSet languageCharacterSet, String string){
-        int min = languageCharacterSet.getCharacterSet().stream().min(Character::compareTo).get();
-        int max = languageCharacterSet.getCharacterSet().stream().max(Character::compareTo).get();
-
-        int[] characterSetArray = new int[max-min + 1];
-
-        for(int i = 0; i < string.length(); i++) {
-            characterSetArray[string.charAt(i) - min]++;
-        }
-
-        return characterSetArray;
+        return true;
     }
 
     private void validateInputForCharacterSet(LanguageCharacterSet validCharacterSet, String input) {

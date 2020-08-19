@@ -23,7 +23,8 @@ public class WordsContainingLettersServlet {
     }
 
     @GetMapping("")
-    public String wordsHome() {
+    public String wordsHome(Model model) {
+        model.addAttribute("languages", LanguageCharacterSet.values());
         return "words/wordsLanding";
     }
 
@@ -57,7 +58,8 @@ public class WordsContainingLettersServlet {
                 );
         }
 
-        model.addAttribute("language", LanguageCharacterSet.getLanguageCharacterSetFromLanguageCode(language).get().getFullName());
+        model.addAttribute("languages", LanguageCharacterSet.values());
+        model.addAttribute("selectedLanguage", LanguageCharacterSet.getLanguageCharacterSetFromLanguageCode(language).get().getFullName());
         model.addAttribute("input", input);
         model.addAttribute("minLength", minLength);
         model.addAttribute("words", groupedWords);

@@ -4,7 +4,7 @@
     <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}"/>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Search</title>
+    <title>Word Search Result</title>
 </head>
 <body>
 
@@ -14,7 +14,7 @@
 <div id="searchForm" th:insert="~{words/searchForm :: wordSearchForm}" class="formHider">
 </div>
 
-<h4 th:text="'Results with: ' + ${language} + ', ' + ${input} + ', ' + ${minLength}"></h4>
+<h4 th:text="'Results with: ' + ${selectedLanguage} + ', ' + ${input} + ', ' + ${minLength}"></h4>
 <div class="autoColumnGrid">
     <div class="darkDiv" th:each="groupOfWords : ${words}">
         <h5 th:text="'Length of ' + ${#strings.replace(groupOfWords.get(0),'''','').length()}"></h5>

@@ -16,6 +16,7 @@
 
     <properties>
         <java.version>11</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><!--makes possible to build with æøå-->
     </properties>
 
     <dependencies>

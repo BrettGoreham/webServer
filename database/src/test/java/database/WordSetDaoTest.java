@@ -32,7 +32,7 @@ public class WordSetDaoTest {
         FileSystemResource file = new FileSystemResource("src/main/resources/dictionaries/en_dictionary.txt");
         when(resourceLoader.getResource(Mockito.anyString())).thenReturn(file);
 
-        List<String> words = wordSetDao.getWordsForLanguage(LanguageCharacterSet.ENGLISH, 0);
+        List<String> words = wordSetDao.getWordsForLanguage(LanguageCharacterSet.ENGLISH, 0, 99);
 
         Assertions.assertEquals(4444, words.size());//fun that its 4444 but thats actually how many words were generated hahaha
     }

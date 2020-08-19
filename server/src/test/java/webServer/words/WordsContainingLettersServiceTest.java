@@ -29,7 +29,7 @@ public class WordsContainingLettersServiceTest {
 
     @BeforeEach
     public void beforeEach(){
-        when(wordSetDao.getWordsForLanguage(any(LanguageCharacterSet.class), anyInt())).thenReturn(words);
+        when(wordSetDao.getWordsForLanguage(any(LanguageCharacterSet.class), anyInt(), anyInt())).thenReturn(words);
     }
 
     @Test

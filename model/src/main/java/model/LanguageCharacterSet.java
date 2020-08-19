@@ -6,7 +6,9 @@ import java.util.Optional;
 
 public enum LanguageCharacterSet {
 
-    ENGLISH("en","English", 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z');
+    ENGLISH("en","English", 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'),
+    Norwegian("no", "Norwegian", 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z', 'æ', 'ø', 'å');
+
 
     private final String langCode;
     private final String fullName;

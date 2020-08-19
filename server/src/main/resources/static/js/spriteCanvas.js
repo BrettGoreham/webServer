@@ -659,8 +659,8 @@ class spriteCanvas {
             if (this.undoStack.length === 0) {
                 this.dispatchUndoAvailabilityEvent(true);
             }
-            else if (this.undoStack.length >= 15) {
-                this.undoStack.pop(); // undo limit set to 10 for some reason
+            else if (this.undoStack.length >= 25) {
+                this.undoStack.pop(); // undo limit set to 25 for some reason
             }
             let action;
             if (actionOverride) {

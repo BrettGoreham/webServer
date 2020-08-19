@@ -25,33 +25,33 @@ public class WordSetDao {
         this.resourceLoader = resourceLoader;
     }
 
-    public List<String> getWordsForLanguage(LanguageCharacterSet languageCharacterSet, int minLength) {
-
+    public List<String> getWordsForLanguage(LanguageCharacterSet languageCharacterSet, int minLength, int maxLength) {
         String dictionaryClassPath =
             classpath +
                 languageCharacterSet.getLangCode() +
                 dictionary;
 
-
         Resource resource = resourceLoader.getResource(dictionaryClassPath);
 
         Scanner scanner;
         try {
-
-
             scanner = new Scanner(resource.getInputStream());
         } catch (IOException e) {
             throw new RuntimeException("No Dictionary Found For language: " + languageCharacterSet.getLangCode(), e);
         }
 
-
         List<String> dictionary = new ArrayList<>();
         while (scanner.hasNext()) {
             String line = scanner.nextLine();
-            if (!line.isBlank() && !line.startsWith("#") && line.length() >= minLength) {
+            if (!line.isBlank()
+                && !line.startsWith("#")
+                && line.length() <= maxLength
+                && line.length() >= minLength) {
+
                dictionary.add(line);
             }
         }
+
         return dictionary;
     }
 }

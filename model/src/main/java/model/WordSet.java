@@ -11,9 +11,8 @@ public class WordSet {
     private List<String> wordsInSet;
     private int[] representativeLetterArray;
 
-    public WordSet(String orderedCharacters, int[] representativeLetterArray, String... wordsInSet) {
+    public WordSet(String orderedCharacters, String... wordsInSet) {
         this.orderedCharacters = orderedCharacters;
-        this.representativeLetterArray = representativeLetterArray;
         this.wordsInSet = new ArrayList<>(Arrays.asList(wordsInSet));
     }
     public String getOrderedCharacters() {
@@ -32,12 +31,24 @@ public class WordSet {
         this.wordsInSet = wordsInSet;
     }
 
-    public int[] getRepresentativeLetterArray() {
-        return representativeLetterArray;
+    public int[] createOrGetRepresentativeLetterArray(LanguageCharacterSet lang) {
+        if (representativeLetterArray != null) {
+            return representativeLetterArray;
+        }
+        return getInputCharacterSetArrayForString(lang, this.orderedCharacters);
     }
 
-    public void setRepresentativeLetterArray(int[] representativeLetterArray) {
-        this.representativeLetterArray = representativeLetterArray;
+    public static int[] getInputCharacterSetArrayForString(LanguageCharacterSet languageCharacterSet, String string){
+        int min = languageCharacterSet.getCharacterSet().stream().min(Character::compareTo).get();
+        int max = languageCharacterSet.getCharacterSet().stream().max(Character::compareTo).get();
+
+        int[] characterSetArray = new int[max-min + 1];
+
+        for(int i = 0; i < string.length(); i++) {
+            characterSetArray[string.charAt(i) - min]++;
+        }
+
+        return characterSetArray;
     }
 
     @Override
