@@ -24,6 +24,8 @@ public class WordsContainingLettersService {
 
         List<WordSet> baseWordSet = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input, minLength, input.length()); //combine dictionary into like words. as they are treated the same.
 
+        baseWordSet = groupLikeWordSets(baseWordSet);
+
         int[] inputRepresentation = WordSet.getInputCharacterSetArrayForString(validCharacterSet, input);
         List<ListOfWordSetsResultSet> combinationsOfWordSetsPossible = combineBaseWordSetToMakeAllCombinationsPossible(validCharacterSet, inputRepresentation, baseWordSet);
 
@@ -150,42 +152,59 @@ public class WordsContainingLettersService {
             Arrays.sort(ar);
             String sorted = String.valueOf(ar);
 
-            Optional<WordSet> existingWordSet = wordSets.stream()
-                .filter(wordSet -> wordSet.getOrderedCharacters().equals(sorted))
-                .findFirst();
-
-            if (existingWordSet.isPresent()) {
-                existingWordSet.get().getWordsInSet().add(word);
-            }
-            else {
-                WordSet potentialWordSet = new WordSet(
-                    sorted,
-                    word
+            if (isWordPossible(sorted, input)) {
+                wordSets.add(
+                    new WordSet(
+                        sorted,
+                        word
+                    )
                 );
-
-                if(isWordPossible(potentialWordSet, input)) {
-                    wordSets.add(potentialWordSet);
-                }
             }
         }
 
         return wordSets;
     }
 
+    private List<WordSet> groupLikeWordSets(List<WordSet> wordSets) {
+        HashMap<String, List<WordSet>> collect = wordSets
+            .stream()
+            .collect(
+                Collectors.groupingBy(
+                    WordSet::getOrderedCharacters,
+                    HashMap::new,
+                    Collectors.toList()
+                )
+            );
+
+        List<WordSet> groupWordSet = new ArrayList<>();
+        for (List<WordSet> set : collect.values()) {
+            WordSet grouped = new WordSet(
+                set.get(0).getOrderedCharacters(),
+                set.stream()
+                    .flatMap(wordSet -> wordSet.getWordsInSet().stream())
+                    .collect(Collectors.toList())
+            );
+
+            groupWordSet.add(grouped);
+
+        }
+
+        return groupWordSet;
+
+    }
+
     //ensure input is sorted before getting here
-    private boolean isWordPossible(WordSet wordSet, String input) {
-        
-        String wordSetCharacters = wordSet.getOrderedCharacters();
+    private boolean isWordPossible(String wordToCheck, String input) {
 
         int wordSetCount = 0;
         int inputCount = 0;
         while (inputCount < input.length()) {
             char inputChar = input.charAt(inputCount);
-            char wordSetChar = wordSetCharacters.charAt(wordSetCount);
+            char wordSetChar = wordToCheck.charAt(wordSetCount);
             if( inputChar == wordSetChar) {
                 inputCount++;
                 wordSetCount++;
-                if(wordSetCount == wordSetCharacters.length()) {
+                if(wordSetCount == wordToCheck.length()) {
                     return true;
                 }
             } else if (inputChar < wordSetChar){

@@ -15,6 +15,11 @@ public class WordSet {
         this.orderedCharacters = orderedCharacters;
         this.wordsInSet = new ArrayList<>(Arrays.asList(wordsInSet));
     }
+
+    public WordSet(String orderedCharacters, List<String> wordsInSet) {
+        this.orderedCharacters = orderedCharacters;
+        this.wordsInSet = wordsInSet;
+    }
     public String getOrderedCharacters() {
         return orderedCharacters;
     }

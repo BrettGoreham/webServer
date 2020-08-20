@@ -1,7 +1,6 @@
 package webServer.words;
 
 import model.LanguageCharacterSet;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +36,7 @@ public class WordsContainingLettersServlet {
                                 .stream()
                                 .collect(
                                     Collectors.groupingBy(
-                                        a -> a.replaceAll("'", "").length(),
+                                        a -> a.replace("'", "").length(),
                                         HashMap::new,
                                         Collectors.toList())
                                 )
@@ -47,8 +46,8 @@ public class WordsContainingLettersServlet {
         groupedWords.sort(
             (lista, listb) ->
                 Integer.compare(
-                    listb.get(0).replaceAll("'", "").length(),
-                    lista.get(0).replaceAll("'", "").length()
+                    listb.get(0).replace("'", "").length(),
+                    lista.get(0).replace("'", "").length()
                 )
         );
 
