@@ -4,11 +4,9 @@ import database.WordSetDao;
 import model.LanguageCharacterSet;
 import model.ListOfWordSetsResultSet;
 import model.WordSet;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebInputException;
 
-import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,10 +22,9 @@ public class WordsContainingLettersService {
         LanguageCharacterSet validCharacterSet = getLanguage(language);
         validateInputForCharacterSet(validCharacterSet, input);
 
+        List<WordSet> baseWordSet = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input, minLength, input.length()); //combine dictionary into like words. as they are treated the same.
+
         int[] inputRepresentation = WordSet.getInputCharacterSetArrayForString(validCharacterSet, input);
-
-        List<WordSet> baseWordSet = createWordSetsFromWordDictionary(validCharacterSet, inputRepresentation, minLength, input.length()); //combine dictionary into like words. as they are treated the same.
-
         List<ListOfWordSetsResultSet> combinationsOfWordSetsPossible = combineBaseWordSetToMakeAllCombinationsPossible(validCharacterSet, inputRepresentation, baseWordSet);
 
         combinationsOfWordSetsPossible.sort(Comparator.comparing(ListOfWordSetsResultSet::getOrCalculateNumberOfRemainingLetters));
@@ -61,9 +58,7 @@ public class WordsContainingLettersService {
         LanguageCharacterSet validCharacterSet = getLanguage(language);
         validateInputForCharacterSet(validCharacterSet, input);
 
-        int[] inputRepresentation = WordSet.getInputCharacterSetArrayForString(validCharacterSet, input);
-
-        List<WordSet> possibleWordSets = createWordSetsFromWordDictionary(validCharacterSet, inputRepresentation,  minLength, input.length());
+        List<WordSet> possibleWordSets = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input,  minLength, input.length());
 
         return possibleWordSets
             .stream()
@@ -138,8 +133,12 @@ public class WordsContainingLettersService {
 
     }
 
-    private List<WordSet> createWordSetsFromWordDictionary(LanguageCharacterSet languageCharacterSet, int[] inputRepresentation, int minLength, int maxLength) {
+    private List<WordSet> getAllPossibleWordSetsFromWordDictionary(LanguageCharacterSet languageCharacterSet, String input, int minLength, int maxLength) {
         List<WordSet> wordSets = new ArrayList<>();
+
+        char[] inputArray = input.toCharArray();
+        Arrays.sort(inputArray);
+        input = String.valueOf(inputArray);
 
         List<String> words = wordSetDao.getWordsForLanguage(languageCharacterSet, minLength, maxLength);
 
@@ -164,7 +163,7 @@ public class WordsContainingLettersService {
                     word
                 );
 
-                if(isWordPossible(languageCharacterSet, potentialWordSet, inputRepresentation)) {
+                if(isWordPossible(potentialWordSet, input)) {
                     wordSets.add(potentialWordSet);
                 }
             }
@@ -173,15 +172,30 @@ public class WordsContainingLettersService {
         return wordSets;
     }
 
-    private boolean isWordPossible(LanguageCharacterSet languageCharacterSet, WordSet potentialWordSet, int[] inputRepresentation) {
-        int[] wordRepresentation = potentialWordSet.createOrGetRepresentativeLetterArray(languageCharacterSet);
-        for (int i =0; i < wordRepresentation.length ; i++) {
-            if (inputRepresentation[i] - wordRepresentation[i] < 0) {
+    //ensure input is sorted before getting here
+    private boolean isWordPossible(WordSet wordSet, String input) {
+        
+        String wordSetCharacters = wordSet.getOrderedCharacters();
+
+        int wordSetCount = 0;
+        int inputCount = 0;
+        while (inputCount < input.length()) {
+            char inputChar = input.charAt(inputCount);
+            char wordSetChar = wordSetCharacters.charAt(wordSetCount);
+            if( inputChar == wordSetChar) {
+                inputCount++;
+                wordSetCount++;
+                if(wordSetCount == wordSetCharacters.length()) {
+                    return true;
+                }
+            } else if (inputChar < wordSetChar){
+                inputCount++;
+            } else {
                 return false;
             }
         }
 
-        return true;
+        return false;
     }
 
     private void validateInputForCharacterSet(LanguageCharacterSet validCharacterSet, String input) {
