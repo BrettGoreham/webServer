@@ -1,13 +1,11 @@
 package database;
 
-import model.LanguageCharacterSet;
+import model.words.LanguageCharacterSet;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 
 import org.springframework.stereotype.Repository;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

@@ -2,7 +2,7 @@ package webServer.words;
 
 
 import database.WordSetDao;
-import model.LanguageCharacterSet;
+import model.words.LanguageCharacterSet;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;

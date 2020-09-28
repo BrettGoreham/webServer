@@ -1,9 +1,7 @@
-package model;
+package model.words;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ListOfWordSetsResultSet {
     public ListOfWordSetsResultSet(List<WordSet> wordSets, int[] remainingCharacters) {

@@ -56,11 +56,11 @@
     </build>
 
     <dependencies>
-
+        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>2.1.5.RELEASE</version>
+
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -72,9 +72,9 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jetty</artifactId>
-            <version>2.1.5.RELEASE</version>
-        </dependency>
 
+        </dependency>
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -103,12 +103,16 @@
             <groupId>brettGoreham</groupId>
             <artifactId>model</artifactId>
             <version>1.1-SNAPSHOT</version>
-
+        </dependency>
+        <dependency>
+            <groupId>brettGoreham</groupId>
+            <artifactId>integration</artifactId>
+            <version>1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>5.7.0</version>
             <scope>test</scope>
         </dependency>
 

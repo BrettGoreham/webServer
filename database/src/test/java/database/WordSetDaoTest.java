@@ -1,6 +1,6 @@
 package database;
 
-import model.LanguageCharacterSet;
+import model.words.LanguageCharacterSet;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

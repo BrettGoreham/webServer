@@ -1,0 +1,914 @@
+openapi: 3.0.1
+info:
+  title: products
+  description: Product operations
+  version: v0
+servers:
+  - url: https://apis.vinmonopolet.no/products/v0
+paths:
+  /accumulated-stock:
+    get:
+      summary: Get accumulated stock
+      description: "Returns daily accumulated stock for basic, one lot, test and ordering ranges. Stock values updated approx 08:30 AM CET every day.\n\nThrottling as per 28. June 2019: Max 20 calls per minute. Max 400 calls per day."
+      operationId: GET_STOCK_ACCUMULATED
+      parameters:
+        - name: productId
+          in: query
+          description: Returns stock of products that match productId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns stock of products that have been updated since the supplied date (yyyy-MM-dd)
+          schema:
+            type: string
+        - name: includeZeroStock
+          in: query
+          description: Include products which are sold and its stock is 0 (zero)
+          schema:
+            type: boolean
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of products returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of products, ordered by productID'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            x-total-count:
+              description: Total number of records that satisfy the request criteria
+              schema:
+                type: integer
+            link:
+              description: Links to previous/next pages
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_STOCK_ACCUMULATED_Response'
+        '400':
+          description: Bad Request (wrong parameters/values supplied)
+        '500':
+          description: Error
+    head:
+      summary: Get accumulated stock (no response body)
+      description: "Returns daily accumulated stock for basic, one lot, test and ordering ranges. Stock values updated approx 06:45 AM CET every day.\n<br>\n(Same as Get method, but no response body, only header info)\n<br>\n\nThrottling as per 28. June 2019: Max 20 calls per minute. Max 400 calls per day."
+      operationId: 5e9d65fef1e6a32e220ba42c
+      parameters:
+        - name: productId
+          in: query
+          description: Returns stock of products that match productId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns stock of products that have been updated since the supplied date (yyyy-MM-dd)
+          schema:
+            type: string
+        - name: includeZeroStock
+          in: query
+          description: Include products which are sold and its stock is 0 (zero)
+          schema:
+            type: boolean
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of products returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of products, ordered by productID'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            x-total-count:
+              description: Total number of records that satisfy the request criteria
+              schema:
+                type: integer
+            link:
+              description: Links to previous/next pages
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_STOCK_ACCUMULATED_Response'
+        '400':
+          description: Bad Request (wrong parameters/values supplied)
+        '500':
+          description: Error
+  /monthly-sales-per-store:
+    get:
+      summary: Get monthly sales
+      description: "Returns monthly sales data. \n<br>\nLast month sales available from the 20th the next month, at approx 07:30 AM CET. Use parameter \"changedSince\" to get any updates / corrections made to historic sales. Select only one month to avoid pagination. If you experience timeouts, use pagination by sending parameter maxResults (default 1048575 ).\n<br>\nThrottling as per 17. October 2019: Max 60 calls per minute. Max 600 calls per day."
+      operationId: GET_MONTHLY_SALES
+      parameters:
+        - name: fromSalesMonth
+          in: query
+          description: Returns sales occurrences in interval from this sales month yyyy-MM
+          schema:
+            type: string
+        - name: toSalesMonth
+          in: query
+          description: Returns sales occurrences in interval to this sales month yyyy-MM
+          schema:
+            type: string
+        - name: fromStoreId
+          in: query
+          description: Returns sales occurrences in interval from this store id number
+          schema:
+            type: integer
+        - name: toStoreId
+          in: query
+          description: Returns sales occurrences in interval to this store id number
+          schema:
+            type: integer
+        - name: productId
+          in: query
+          description: Returns sales occurrences for requested productId
+          schema:
+            type: integer
+        - name: vendorId
+          in: query
+          description: Returns sales occurrences for requested vendorId
+          schema:
+            type: integer
+        - name: wholesalerId
+          in: query
+          description: Returns sales occurrences for requested wholesalerId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns sales occurrences that have been updated since the supplied month - only yyyy-MM-dd
+          schema:
+            type: string
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of sales occurrences returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of sales occurrences, ordered by sales month, store and productId'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_MONTHLY_SALES_Response'
+        '400':
+          description: Bad Request (wrong parameters/values supplied)
+        '500':
+          description: Error
+    head:
+      summary: Get monthly sales (no response body)
+      description: "Returns monthly sales data. \n<br>\n(Same as Get method, but no response body, only header info)\n<br>\nLast month sales available from the 20th the next month. Select only one month to avoid pagination. If you experience timeouts, use pagination by sending parameter maxResults (default 1048575 ).\n<br>\nThrottling as per 17. October 2019: Max 60 calls per minute. Max 600 calls per day."
+      operationId: 5e9d657fc1dd661604a972a4
+      parameters:
+        - name: fromSalesMonth
+          in: query
+          description: Returns sales occurrences in interval from this sales month yyyy-MM
+          schema:
+            type: string
+        - name: toSalesMonth
+          in: query
+          description: Returns sales occurrences in interval to this sales month yyyy-MM
+          schema:
+            type: string
+        - name: fromStoreId
+          in: query
+          description: Returns sales occurrences in interval from this store id number
+          schema:
+            type: integer
+        - name: toStoreId
+          in: query
+          description: Returns sales occurrences in interval to this store id number
+          schema:
+            type: integer
+        - name: productId
+          in: query
+          description: Returns sales occurrences for requested productId
+          schema:
+            type: integer
+        - name: vendorId
+          in: query
+          description: Returns sales occurrences for requested vendorId
+          schema:
+            type: integer
+        - name: wholesalerId
+          in: query
+          description: Returns sales occurrences for requested wholesalerId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns sales occurrences that have been updated since the supplied month - only yyyy-MM-dd
+          schema:
+            type: string
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of sales occurrences returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of sales occurrences, ordered by sales month, store and productId'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_MONTHLY_SALES_Response'
+        '400':
+          description: Bad Request (wrong parameters/values supplied)
+        '500':
+          description: Error
+  /details-normal:
+    get:
+      summary: Get details-normal
+      description: "Returns master data details on Vinmonopolet's products in basic, one lot, test and ordering ranges. <br>\nMaster data is updated approx 05:45 AM CET every day. Use parameter \"changedSince\" to get only updated products, including products that have been removed from basic, one lot, test and ordering ranges since supplied date.\n<br>\nThrottling as per 15. November 2019: Max 60 calls per minute. Max 4000 calls per day."
+      operationId: GET_DETAILS_NORMAL
+      parameters:
+        - name: productId
+          in: query
+          description: Returns details of all products that match productId
+          schema:
+            type: string
+        - name: vendorId
+          in: query
+          description: Returns details of all products that match vendorId
+          schema:
+            type: integer
+        - name: manufacturerId
+          in: query
+          description: Returns details of all products that match manufacturerId
+          schema:
+            type: integer
+        - name: wholesalerId
+          in: query
+          description: Returns details of all products that match wholesalerId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns details of all products that have been updated since the supplied date - only numeric yyyy-MM-dd
+          schema:
+            type: string
+        - name: productShortNameContains
+          in: query
+          description: Returns details of all products where productShortName contains the supplied string
+          schema:
+            type: string
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of products returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of products, ordered by productID'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_DETAILS_Response'
+        '400':
+          description: Bad Request (wrong parameter values given)
+        '500':
+          description: Error
+    head:
+      summary: Get details-normal (no response body)
+      description: "Returns master data details on Vinmonopolet's products in basic, one lot, test and ordering ranges. \n<br>\n(Same as Get method, but no response body, only header info)\n<br>\nMaster data is updated approx 05:45 AM CET every day. Use parameter \"changedSince\" to get only updated products, including products that have been removed from basic, one lot, test and ordering ranges since supplied date.\n<br>\nThrottling as per 15. November 2019: Max 60 calls per minute. Max 4000 calls per day."
+      operationId: 5e9d65cd0b839fb90114d801
+      parameters:
+        - name: productId
+          in: query
+          description: Returns details of all products that match productId
+          schema:
+            type: string
+        - name: vendorId
+          in: query
+          description: Returns details of all products that match vendorId
+          schema:
+            type: integer
+        - name: manufacturerId
+          in: query
+          description: Returns details of all products that match manufacturerId
+          schema:
+            type: integer
+        - name: wholesalerId
+          in: query
+          description: Returns details of all products that match wholesalerId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns details of all products that have been updated since the supplied date - only numeric yyyy-MM-dd
+          schema:
+            type: string
+        - name: productShortNameContains
+          in: query
+          description: Returns details of all products where productShortName contains the supplied string
+          schema:
+            type: string
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of products returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of products, ordered by productID'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_DETAILS_Response'
+        '400':
+          description: Bad Request (wrong parameter values given)
+        '500':
+          description: Error
+  /price-elements:
+    get:
+      summary: Get price elements
+      description: "Returns price details on Vinmonopolet's products above 4,7% alcohol percent in basic, one lot, test and ordering ranges.\n<br>\nMaster data is updated approx 07:30 AM CET every day. Use parameter \"changedSince\" to get only updated products, including products that have been removed from basic, one lot, test and ordering ranges since supplied date.\n<br>\nThrottling as per 15. November 2019: Max 60 calls per minute. Max 400 calls per day."
+      operationId: GET_PRICE_ELEMENTS
+      parameters:
+        - name: productId
+          in: query
+          description: Returns details of all products that match productId
+          schema:
+            type: string
+        - name: vendorId
+          in: query
+          description: Returns details of all products that match vendorId
+          schema:
+            type: integer
+        - name: manufacturerId
+          in: query
+          description: Returns details of all products that match manufacturerId
+          schema:
+            type: integer
+        - name: wholesalerId
+          in: query
+          description: Returns details of all products that match wholesalerId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns details of all products that have been updated since the supplied date - only numeric yyyy-MM-dd
+          schema:
+            type: string
+        - name: productShortNameContains
+          in: query
+          description: Returns details of all products where productShortName contains the supplied string
+          schema:
+            type: string
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of products returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of products, ordered by productID'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            x-total-count:
+              description: Total number of records that satisfy the request criteria
+              schema:
+                type: integer
+            link:
+              description: Links to previous/next pages
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_PRICE_CONDITIONS_Response'
+        '400':
+          description: Bad Request (wrong parameters/values supplied)
+        '500':
+          description: Error
+    head:
+      summary: Get price elements (no response body)
+      description: "Returns price details on Vinmonopolet's products above 4,7% alcohol percent in basic, one lot, test and ordering ranges.\n<br>\n(Same as Get method, but no response body, only header info)\n<br>\nMaster data is updated approx 07:30 AM CET every day. Use parameter \"changedSince\" to get only updated products, including products that have been removed from basic, one lot, test and ordering ranges since supplied date.\n<br>\nThrottling as per 15. November 2019: Max 60 calls per minute. Max 400 calls per day."
+      operationId: 5e9d6503805a9d7ca7d59e32
+      parameters:
+        - name: productId
+          in: query
+          description: Returns details of all products that match productId
+          schema:
+            type: string
+        - name: vendorId
+          in: query
+          description: Returns details of all products that match vendorId
+          schema:
+            type: integer
+        - name: manufacturerId
+          in: query
+          description: Returns details of all products that match manufacturerId
+          schema:
+            type: integer
+        - name: wholesalerId
+          in: query
+          description: Returns details of all products that match wholesalerId
+          schema:
+            type: integer
+        - name: changedSince
+          in: query
+          description: Returns details of all products that have been updated since the supplied date - only numeric yyyy-MM-dd
+          schema:
+            type: string
+        - name: productShortNameContains
+          in: query
+          description: Returns details of all products where productShortName contains the supplied string
+          schema:
+            type: string
+        - name: maxResults
+          in: query
+          description: Limits the maximum number of products returned in each request
+          schema:
+            type: integer
+        - name: start
+          in: query
+          description: 'Skips the supplied amount of products, ordered by productID'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            x-total-count:
+              description: Total number of records that satisfy the request criteria
+              schema:
+                type: integer
+            link:
+              description: Links to previous/next pages
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GET_PRICE_CONDITIONS_Response'
+        '400':
+          description: Bad Request (wrong parameters/values supplied)
+        '500':
+          description: Error
+components:
+  schemas:
+    GET_DETAILS_Response:
+      type: array
+      items:
+        properties:
+          basic:
+            type: object
+            properties:
+              productId:
+                type: string
+                description: Product ID
+              productShortName:
+                type: string
+                description: Product short name
+              productLongName:
+                type: string
+                description: Product long name
+              volume:
+                type: number
+                description: Volume
+              alcoholContent:
+                type: number
+                description: Alcohol content (percentage)
+              vintage:
+                type: string
+                description: Vintage (year)
+              ageLimit:
+                type: string
+                description: Age limit
+              packagingMaterialId:
+                type: string
+                description: Packaging Material ID
+              packagingMaterial:
+                type: string
+                description: Packaging Material name
+              volumTypeId:
+                type: string
+                description: (Based on content in liters)
+              volumType:
+                type: string
+                description: Volum Type name
+              corkTypeId:
+                type: string
+                description: Cork Type ID
+              corkType:
+                type: string
+                description: Cork Type name
+              bottlePerSalesUnit:
+                type: string
+                description: 'Only for multi-bottle packaging (eg miniature bottles sold together). Multi-bottle packaging is not D-PAK/carton, but a sales unit where several smaller units are sold together as one.'
+              introductionDate:
+                type: string
+                description: Launch date
+              productStatusSaleId:
+                type: string
+                description: Specifies the current sales status code for sold out or expired. This code controls the customer order.
+              productStatusSaleName:
+                type: string
+                description: Current sales status code
+              productStatusSaleValidFrom:
+                type: string
+                description: Date which the status sales code is valid from
+          logistics:
+            type: object
+            properties:
+              barcodes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    gtin:
+                      type: string
+                      description: EAN/UPC
+                    isMainGtin:
+                      type: boolean
+                      description: true = main GTIN (true/false)
+              orderPack:
+                type: string
+                description: 'Packaging type the GTIN should be associated with. STK for sales unit and D-PAK for cardboard. If D-PAK does not exist, use KAR and Set Number.'
+              minimumOrderQuantity:
+                type: number
+                description: Minimum quantity in items for ordering
+              packagingWeight:
+                type: number
+                description: Packaging weight (grams)
+          origins:
+            type: object
+            properties:
+              origin:
+                type: object
+                properties:
+                  countryId:
+                    type: string
+                    description: 'Country of origin ID. As a general rule, it must comply with the label'
+                  country:
+                    type: string
+                    description: Country of origin name
+                  regionId:
+                    type: string
+                    description: District ID according to label
+                  region:
+                    type: string
+                    description: District name
+                  subRegionId:
+                    type: string
+                    description: Sub region ID
+                  subRegion:
+                    type: string
+                    description: Sub region name
+              production:
+                type: object
+                properties:
+                  countryId:
+                    type: string
+                    description: Production country of origin ID
+                  country:
+                    type: string
+                    description: Production country of origin name
+                  regionId:
+                    type: string
+                    description: Production district ID
+                  region:
+                    type: string
+                    description: Production district name
+              localQualityClassifId:
+                type: string
+                description: Formal quality designation ID in accordance with the label. Ex. AOC.
+              localQualityClassif:
+                type: string
+                description: Formal quality designation name
+          properties:
+            type: object
+            properties:
+              ecoLabellingId:
+                type: string
+                description: Eco-label according to label
+              ecoLabelling:
+                type: string
+                description: Eco-label description
+              storagePotentialId:
+                type: string
+                description: Storage potential ID
+              storagePotential:
+                type: string
+                description: Storage potential name
+              organic:
+                type: boolean
+                description: Organic (true/false)
+              biodynamic:
+                type: boolean
+                description: Biodynamic (true/false)
+              ethicallyCertified:
+                type: boolean
+                description: Ethically certified (true/false)
+              vintageControlled:
+                type: boolean
+                description: Year is part of article name in website (true/false)
+              sweetWine:
+                type: boolean
+                description: Sweet wine (true/false)
+              freeOrLowOnGluten:
+                type: boolean
+                description: Free/low on gluten (true/false)
+              kosher:
+                type: boolean
+                description: Kosher (true/false)
+              locallyProduced:
+                type: boolean
+                description: Item is locally produced (true/false)
+              noAddedSulphur:
+                type: boolean
+                description: Without added sulfur (true/false)
+              environmentallySmart:
+                type: boolean
+                description: Enviromentally smart packaging (true/false)
+              productionMethodStorage:
+                type: string
+                description: Production/Storage method short description
+          classification:
+            type: object
+            properties:
+              mainProductTypeId:
+                type: string
+                description: Main product type ID
+              mainProductTypeName:
+                type: string
+                description: Main product type name
+              subProductTypeId:
+                type: string
+                description: Sub product type ID
+              subProductTypeName:
+                type: string
+                description: Sub product type name
+              productTypeId:
+                type: string
+                description: Product type ID (5 digits)
+              productTypeName:
+                type: string
+                description: Product type name
+              productGroupId:
+                type: string
+                description: Product group ID
+              productGroupName:
+                type: string
+                description: Product group name
+          ingredients:
+            type: object
+            properties:
+              grapes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    grapeId:
+                      type: string
+                      description: Grape ID
+                    grapeDesc:
+                      type: string
+                      description: Grape description
+                    grapePct:
+                      type: string
+                      description: Grape percentage
+              ingredients:
+                type: string
+                description: Other ingredients than grape
+              sugar:
+                type: string
+                description: 'Analytical value for sugar in grams per liter (wine and strong wine given as glucose+fructose, liquor given as total sugar).  Less than 3 grams per liter is shown as ''< 3'''
+              acid:
+                type: string
+                description: Analytical value for acid (tartaric acid)
+          description:
+            type: object
+            properties:
+              characteristics:
+                type: object
+                properties:
+                  colour:
+                    type: string
+                    description: Color depth and hue
+                  odour:
+                    type: string
+                    description: Odour
+                  taste:
+                    type: string
+                    description: Taste
+              freshness:
+                type: string
+                description: Freshness sensory value (on a scale from 1 to 12)
+              fullness:
+                type: string
+                description: Fullness sensory value (on a scale from 1 to 12)
+              bitterness:
+                type: string
+                description: Bitterness sensory value (on a scale from 1 to 12)
+              sweetness:
+                type: string
+                description: Sweetness sensory value (on a scale from 1 to 12)
+              tannins:
+                type: string
+                description: Tannins sensory value (on a scale from 3 to 12)
+              recommendedFood:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    foodId:
+                      type: string
+                      description: ID of dish that is particularly suitable in combination with the product
+                    foodDesc:
+                      type: string
+                      description: Description of dish that is particularly suitable in combination with the product
+          assortment:
+            type: object
+            properties:
+              assortmentId:
+                type: string
+                description: Product assortment ID
+              assortment:
+                type: string
+                description: Product assortment name
+              validFrom:
+                type: string
+                description: Valid-from date in product assortment
+              listedFrom:
+                type: string
+                description: Listed-from date in product assortment
+              assortmentGrade:
+                type: string
+                description: ''
+          prices:
+            type: array
+            items:
+              type: object
+              properties:
+                priceValidFrom:
+                  type: string
+                  description: 'Date from the price applies,'
+                salesPrice:
+                  type: number
+                  description: Sales price calculated by Vinmonopolet and shown only if the current date is within a valid price date
+                salesPricePrLiter:
+                  type: number
+                  description: Sales price per liter
+                bottleReturnValue:
+                  type: number
+                  description: Bottle return value
+          lastChanged:
+            type: object
+            properties:
+              date:
+                type: string
+                description: Date when product was last changed
+              time:
+                type: string
+                description: Time when product was last changed
+    GET_PRICE_CONDITIONS_Response:
+      type: array
+      items:
+        type: object
+        properties:
+          productId:
+            type: string
+            description: Product ID
+          priceElements:
+            type: array
+            items:
+              type: object
+              properties:
+                salesPrice:
+                  type: number
+                  description: Sales price in NOK
+                markup:
+                  type: number
+                  description: Markup in NOK
+                dduPrice:
+                  type: number
+                  description: DDU Price in NOK
+                salesPricePrLiter:
+                  type: number
+                  description: Sales price per liter in NOK
+                valueAddedTax:
+                  type: number
+                  description: VAT in NOK
+                alcoholTax:
+                  type: number
+                  description: Alcohol tax in NOK
+                ecoTax:
+                  type: number
+                  description: Environmental tax in NOK
+                packagingTax:
+                  type: number
+                  description: Packaging tax in NOK
+                bottleReturnValue:
+                  type: number
+                  description: Bottle return value in NOK
+    GET_MONTHLY_SALES_Response:
+      type: array
+      items:
+        type: object
+        properties:
+          salesMonth:
+            type: string
+            description: Sales month in format yyyy-MM
+          storeSales:
+            type: array
+            items:
+              type: object
+              properties:
+                storeId:
+                  type: string
+                  description: Store ID
+                sales:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productId:
+                        type: string
+                        description: Product ID
+                      salesVolume:
+                        type: number
+                        description: 'Sales volume in liters, with three decimals'
+                      salesQuantity:
+                        type: number
+                        description: Sales volume in number of items
+                      lastChanged:
+                        type: object
+                        properties:
+                          date:
+                            type: string
+                            description: Date when product sales last changed
+                          time:
+                            type: string
+                            description: Time when product sales last changed
+    GET_STOCK_ACCUMULATED_Response:
+      type: array
+      items:
+        type: object
+        properties:
+          productId:
+            type: string
+            description: Product ID
+          stock:
+            type: integer
+            description: Accumulated stock in all stores (units)
+          numberOfStoresWithStock:
+            type: integer
+            description: Total number of stores that have the product in stock
+          updatedDate:
+            type: string
+            description: Last updated date
+          updatedTime:
+            type: string
+            description: Last updated time
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

@@ -1,9 +1,9 @@
 package webServer.words;
 
 import database.WordSetDao;
-import model.LanguageCharacterSet;
-import model.ListOfWordSetsResultSet;
-import model.WordSet;
+import model.words.LanguageCharacterSet;
+import model.words.ListOfWordSetsResultSet;
+import model.words.WordSet;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebInputException;
 

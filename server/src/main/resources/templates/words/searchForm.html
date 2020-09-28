@@ -8,7 +8,7 @@
     <form  id="findWords" th:action="@{/words/find}" method="get" >
         <label for="language">Language: </label>
         <select required name="language" id="language" form="findWords">
-            <!--/*@thymesVar id="language" type="model.LanguageCharacterSet"*/-->
+            <!--/*@thymesVar id="language" type="model.words.LanguageCharacterSet"*/-->
             <!--/*@thymesVar id="languages" type="java.util.Collection"*/-->
             <option th:each="language : ${languages}"
                     th:text="${language.getFullName()}"
