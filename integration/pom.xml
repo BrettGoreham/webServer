@@ -29,6 +29,8 @@
                             <generatorName>java</generatorName>
 
                             <configOptions>
+                                <sourceFolder>src/gen/java/main</sourceFolder>
+                                <serializableModel>true</serializableModel>
                                 <dateLibrary>java8</dateLibrary>
                             </configOptions>
 
@@ -39,7 +41,7 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateApiDocumentation>false</generateApiDocumentation>
-                            <generateModelDocumentation>true</generateModelDocumentation>
+                            <generateModelDocumentation>false</generateModelDocumentation>
 
                             <library>jersey2</library>
                         </configuration>

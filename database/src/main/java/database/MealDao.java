@@ -20,6 +20,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Repository
 
@@ -170,7 +171,7 @@ public class MealDao {
             return ps;
         }, keyHolder);
 
-        mealCategory.setId(keyHolder.getKey().intValue());
+        mealCategory.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
     }
 
     private void addMealOptionsOfAMealCategory(int mealCategoryId, List<MealOption> options) {
