@@ -19,7 +19,7 @@ CREATE TABLE VINMONOPOLET_BATCH_TOP_LIST_RECORDS(
     saleVolume DOUBLE,
     alcoholPercentage DOUBLE,
     salePricePerLiter DOUBLE,
-    salePricePerAlcoholUnit DOUBLE,
+    salePricePerAlcoholLiter DOUBLE,
 
     PRIMARY KEY (id),
     FOREIGN KEY (fk_vinmonopoletBatchID) REFERENCES VINMONOPOLET_BATCH(batchId)

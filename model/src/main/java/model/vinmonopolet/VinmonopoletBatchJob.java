@@ -1,8 +1,11 @@
 package model.vinmonopolet;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.time.LocalDate;
 import java.util.*;
 
+@JsonIgnoreProperties(value = { "alcoholForSaleComparator" })
 public class VinmonopoletBatchJob {
 
     private long batchId;
@@ -11,8 +14,8 @@ public class VinmonopoletBatchJob {
     private String status;
     private int sizeOfOverallTopList;
     private int sizeOfCategoryTopList;
-    private SortedMaxLengthList<AlcoholForSale> overallAlcoholForSalePricePerAlcoholUnit;
-    private Map<String, SortedMaxLengthList<AlcoholForSale>> categoryToAlcoholForSalePricePerAlcoholUnit;
+    private SortedMaxLengthList<AlcoholForSale> overallAlcoholForSalePricePerAlcoholLiter;
+    private Map<String, SortedMaxLengthList<AlcoholForSale>> categoryToAlcoholForSalePricePerAlcoholLiter;
 
     private final Comparator<AlcoholForSale> alcoholForSaleComparator;
 
@@ -30,21 +33,31 @@ public class VinmonopoletBatchJob {
         this.sizeOfOverallTopList = sizeOfOverallTopList;
         this.sizeOfCategoryTopList = sizeOfCategoryTopList;
 
-        alcoholForSaleComparator = Comparator.comparingDouble(AlcoholForSale::getSalePricePerAlcoholUnit);
+        //Batch job goal to compare the price per liter of alcohol.
+        //name comparison to break ties just to get a decided order per run
+        alcoholForSaleComparator = (o1, o2) -> {
+            int doubleCompareValue = Double.compare(o1.getSalePricePerAlcoholLiter(), o2.getSalePricePerAlcoholLiter());
+            if (doubleCompareValue == 0) {
+                return o1.getName().compareTo(o2.getName());
+            } else {
+                return doubleCompareValue;
+            }
+        };
 
-        overallAlcoholForSalePricePerAlcoholUnit = new SortedMaxLengthList<>(sizeOfOverallTopList, alcoholForSaleComparator);
-        categoryToAlcoholForSalePricePerAlcoholUnit = new HashMap<>();
+
+        overallAlcoholForSalePricePerAlcoholLiter = new SortedMaxLengthList<>(sizeOfOverallTopList, alcoholForSaleComparator);
+        categoryToAlcoholForSalePricePerAlcoholLiter = new HashMap<>();
     }
 
     public void addAlcoholsToTopLists(List<AlcoholForSale> alcoholsToAdd) {
         for (AlcoholForSale alcoholForSale : alcoholsToAdd) {
-            overallAlcoholForSalePricePerAlcoholUnit.add(alcoholForSale);
+            overallAlcoholForSalePricePerAlcoholLiter.add(alcoholForSale);
 
             SortedMaxLengthList<AlcoholForSale> categoryTopList =
-                categoryToAlcoholForSalePricePerAlcoholUnit.getOrDefault(alcoholForSale.getCategory(), new SortedMaxLengthList<>(sizeOfCategoryTopList, alcoholForSaleComparator));
+                categoryToAlcoholForSalePricePerAlcoholLiter.getOrDefault(alcoholForSale.getCategory(), new SortedMaxLengthList<>(sizeOfCategoryTopList, alcoholForSaleComparator));
 
             categoryTopList.add(alcoholForSale);
-            categoryToAlcoholForSalePricePerAlcoholUnit.put(alcoholForSale.getCategory(), categoryTopList);
+            categoryToAlcoholForSalePricePerAlcoholLiter.put(alcoholForSale.getCategory(), categoryTopList);
 
         }
     }
@@ -97,20 +110,20 @@ public class VinmonopoletBatchJob {
         this.sizeOfCategoryTopList = sizeOfCategoryTopList;
     }
 
-    public SortedMaxLengthList<AlcoholForSale> getOverallAlcoholForSalePricePerAlcoholUnit() {
-        return overallAlcoholForSalePricePerAlcoholUnit;
+    public SortedMaxLengthList<AlcoholForSale> getOverallAlcoholForSalePricePerAlcoholLiter() {
+        return overallAlcoholForSalePricePerAlcoholLiter;
     }
 
-    public void setOverallAlcoholForSalePricePerAlcoholUnit(SortedMaxLengthList<AlcoholForSale> overallAlcoholForSalePricePerAlcoholUnit) {
-        this.overallAlcoholForSalePricePerAlcoholUnit = overallAlcoholForSalePricePerAlcoholUnit;
+    public void setOverallAlcoholForSalePricePerAlcoholLiter(SortedMaxLengthList<AlcoholForSale> overallAlcoholForSalePricePerAlcoholLiter) {
+        this.overallAlcoholForSalePricePerAlcoholLiter = overallAlcoholForSalePricePerAlcoholLiter;
     }
 
-    public Map<String, SortedMaxLengthList<AlcoholForSale>> getCategoryToAlcoholForSalePricePerAlcoholUnit() {
-        return categoryToAlcoholForSalePricePerAlcoholUnit;
+    public Map<String, SortedMaxLengthList<AlcoholForSale>> getCategoryToAlcoholForSalePricePerAlcoholLiter() {
+        return categoryToAlcoholForSalePricePerAlcoholLiter;
     }
 
-    public void setCategoryToAlcoholForSalePricePerAlcoholUnit(Map<String, SortedMaxLengthList<AlcoholForSale>> categoryToAlcoholForSalePricePerAlcoholUnit) {
-        this.categoryToAlcoholForSalePricePerAlcoholUnit = categoryToAlcoholForSalePricePerAlcoholUnit;
+    public void setCategoryToAlcoholForSalePricePerAlcoholLiter(Map<String, SortedMaxLengthList<AlcoholForSale>> categoryToAlcoholForSalePricePerAlcoholLiter) {
+        this.categoryToAlcoholForSalePricePerAlcoholLiter = categoryToAlcoholForSalePricePerAlcoholLiter;
     }
 
     public Comparator<AlcoholForSale> getAlcoholForSaleComparator() {

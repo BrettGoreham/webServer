@@ -1,7 +1,10 @@
 package model.vinmonopolet;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.Objects;
 
+@JsonIgnoreProperties(value = { "saleStatus" })
 public class AlcoholForSale {
     private String name;
     private String category;
@@ -12,7 +15,7 @@ public class AlcoholForSale {
     private double saleVolume;
     private double alcoholPercentage;
     private double salePricePerLiter;
-    private double salePricePerAlcoholUnit;
+    private double salePricePerAlcoholLiter;
 
 
     public AlcoholForSale(
@@ -33,7 +36,7 @@ public class AlcoholForSale {
         this.alcoholPercentage = alcoholPercentage;
 
         this.salePricePerLiter = salePrice / saleVolume;
-        this.salePricePerAlcoholUnit = salePricePerLiter / alcoholPercentage;
+        this.salePricePerAlcoholLiter = salePricePerLiter / (alcoholPercentage / 100);
 
     }
 
@@ -101,12 +104,12 @@ public class AlcoholForSale {
         this.salePricePerLiter = salePricePerLiter;
     }
 
-    public double getSalePricePerAlcoholUnit() {
-        return salePricePerAlcoholUnit;
+    public double getSalePricePerAlcoholLiter() {
+        return salePricePerAlcoholLiter;
     }
 
-    public void setSalePricePerAlcoholUnit(double salePricePerAlcoholUnit) {
-        this.salePricePerAlcoholUnit = salePricePerAlcoholUnit;
+    public void setSalePricePerAlcoholLiter(double salePricePerAlcoholLiter) {
+        this.salePricePerAlcoholLiter = salePricePerAlcoholLiter;
     }
 
     public String generateUrlToProduct() {
@@ -136,7 +139,7 @@ public class AlcoholForSale {
             Double.compare(that.saleVolume, saleVolume) == 0 &&
             Double.compare(that.alcoholPercentage, alcoholPercentage) == 0 &&
             Double.compare(that.salePricePerLiter, salePricePerLiter) == 0 &&
-            Double.compare(that.salePricePerAlcoholUnit, salePricePerAlcoholUnit) == 0 &&
+            Double.compare(that.salePricePerAlcoholLiter, salePricePerAlcoholLiter) == 0 &&
             name.equals(that.name) &&
             category.equals(that.category) &&
             vinmonopoletProductId.equals(that.vinmonopoletProductId);
@@ -144,7 +147,7 @@ public class AlcoholForSale {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, category, vinmonopoletProductId, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholUnit);
+        return Objects.hash(name, category, vinmonopoletProductId, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholLiter);
     }
 }
 

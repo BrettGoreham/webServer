@@ -1,11 +1,10 @@
 package database;
 
-import model.MealOption;
 import model.vinmonopolet.AlcoholForSale;
 import model.vinmonopolet.SortedMaxLengthList;
 import model.vinmonopolet.VinmonopoletBatchJob;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
+
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,18 +12,16 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 @Repository
-@Profile("vinmonopoletBatch")
 public class VinmonopoletBatchDao {
 
     @Autowired
@@ -34,7 +31,7 @@ public class VinmonopoletBatchDao {
 
     private final static String insertIntoTopListRecords =
         "INSERT INTO VINMONOPOLET_BATCH_TOP_LIST_RECORDS " +
-            "(fk_vinmonopoletBatchID, listCategory, vinmonopoletProductId, productName, productCategory, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholUnit) " +
+            "(fk_vinmonopoletBatchID, listCategory, vinmonopoletProductId, productName, productCategory, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholLiter) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
@@ -45,9 +42,21 @@ public class VinmonopoletBatchDao {
         "SELECT * FROM VINMONOPOLET_BATCH b " +
             "LEFT JOIN VINMONOPOLET_BATCH_TOP_LIST_RECORDS btlr " +
             "ON b.batchID = btlr.fk_vinmonopoletBatchID " +
-            "WHERE b.lastDateRunWasCheckedAsStillValid = (select MAX(lastDateRunWasCheckedAsStillValid) from VINMONOPOLET_BATCH);";
+            "WHERE b.status = 'COMPLETE' " +
+            "AND b.lastDateRunWasCheckedAsStillValid = (select MAX(lastDateRunWasCheckedAsStillValid) from VINMONOPOLET_BATCH);";
+
+
+    private final static String getBatchBetweenDates =
+        "SELECT * FROM VINMONOPOLET_BATCH b " +
+            "LEFT JOIN VINMONOPOLET_BATCH_TOP_LIST_RECORDS btlr " +
+            "ON b.batchID = btlr.fk_vinmonopoletBatchID " +
+            "WHERE ? BETWEEN b.dateOfRun AND b.lastDateRunWasCheckedAsStillValid " +
+            "AND b.status = 'COMPLETE'";
 
     private final static String OVERALL_LIST_CATEGORY_NAME = "OVERALL";
+
+
+    private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
 
 
     public void saveVinmonopoletBatchJob(VinmonopoletBatchJob vinmonopoletBatchJob) {
@@ -55,12 +64,12 @@ public class VinmonopoletBatchDao {
         int batchId= saveIntoBatchTable(vinmonopoletBatchJob);
 
         //Adding overallList here for ease of Saving when reading it will go into the appropriate place
-        vinmonopoletBatchJob.getCategoryToAlcoholForSalePricePerAlcoholUnit().put(OVERALL_LIST_CATEGORY_NAME, vinmonopoletBatchJob.getOverallAlcoholForSalePricePerAlcoholUnit());
-        saveTopLists(batchId, vinmonopoletBatchJob.getCategoryToAlcoholForSalePricePerAlcoholUnit());
+        vinmonopoletBatchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().put(OVERALL_LIST_CATEGORY_NAME, vinmonopoletBatchJob.getOverallAlcoholForSalePricePerAlcoholLiter());
+        saveTopLists(batchId, vinmonopoletBatchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter());
     }
 
     public void updatePreviousBatchesValidDateToDate(LocalDate lastDateRunWasCheckedAsStillValid, long batchId) {
-        jdbcTemplate.update(updatePreviousBatch, lastDateRunWasCheckedAsStillValid, batchId);
+        jdbcTemplate.update(updatePreviousBatch, Timestamp.from(toUTCDateOfSameDate(lastDateRunWasCheckedAsStillValid)), batchId);
     }
 
     public VinmonopoletBatchJob fetchLastSuccessfulJob() {
@@ -70,7 +79,17 @@ public class VinmonopoletBatchDao {
         return mapRowsToVinmonopoletBatch(rows);
     }
 
+    public VinmonopoletBatchJob fetchBatchJobFromDate(java.util.Date date) {
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(getBatchBetweenDates, Date.from(date.toInstant()));
+
+        return mapRowsToVinmonopoletBatch(rows);
+    }
+
     private VinmonopoletBatchJob mapRowsToVinmonopoletBatch(List<Map<String, Object>> rows) {
+        if(rows.isEmpty()) {
+            return null;
+        }
 
         VinmonopoletBatchJob vinmonopoletBatchJob = null;
 
@@ -111,7 +130,7 @@ public class VinmonopoletBatchDao {
 
         assert vinmonopoletBatchJob != null;
         vinmonopoletBatchJob.addAlcoholsToTopLists(alcoholForSaleList);
-        vinmonopoletBatchJob.setOverallAlcoholForSalePricePerAlcoholUnit(topList);
+        vinmonopoletBatchJob.setOverallAlcoholForSalePricePerAlcoholLiter(topList);
         //to lazy to add method that doesnt set top list while adding to regular list. so overwriting it above
 
         return vinmonopoletBatchJob;
@@ -125,8 +144,8 @@ public class VinmonopoletBatchDao {
             PreparedStatement ps = connection.prepareStatement(insertIntoBatchTable, Statement.RETURN_GENERATED_KEYS);
 
             ps.setString(1, vinmonopoletBatchJob.getStatus());
-            ps.setDate(2, Date.valueOf(vinmonopoletBatchJob.getDateOfRun()));
-            ps.setDate(3, Date.valueOf(vinmonopoletBatchJob.getLastDateRunWasCheckedAsStillValid()));
+            ps.setTimestamp(2, Timestamp.from(toUTCDateOfSameDate(vinmonopoletBatchJob.getLastDateRunWasCheckedAsStillValid())));
+            ps.setTimestamp(3, Timestamp.from(toUTCDateOfSameDate(vinmonopoletBatchJob.getLastDateRunWasCheckedAsStillValid())));
             ps.setInt(4, vinmonopoletBatchJob.getSizeOfOverallTopList());
             ps.setInt(5, vinmonopoletBatchJob.getSizeOfCategoryTopList());
 
@@ -134,6 +153,22 @@ public class VinmonopoletBatchDao {
         }, keyHolder);
 
         return Objects.requireNonNull(keyHolder.getKey()).intValue();
+    }
+
+    //mysql is annoying and saves dates in utc. since norway is +1 or +2
+    // from utc or whatever this saves the day before always
+    // to override im going to add 2 hours to it i guess
+    //this and using time stamp when saving it seemed to solve it.
+    // unless it creates a problem it will stay like this.
+    private Instant toUTCDateOfSameDate(LocalDate localDate) {
+        return
+            ZonedDateTime.of(
+                    localDate.getYear(),
+                    localDate.getMonthValue(),
+                    localDate.getDayOfMonth(),
+                    0,0,0,0, ZoneId.of("UTC")
+                )
+                .toInstant();
     }
 
     private void saveTopLists(int batchId, Map<String, SortedMaxLengthList<AlcoholForSale>> topListsToSave) {
@@ -153,7 +188,7 @@ public class VinmonopoletBatchDao {
                     ps.setDouble(7, toSave.getSaleVolume());
                     ps.setDouble(8, toSave.getAlcoholPercentage());
                     ps.setDouble(9, toSave.getSalePricePerLiter());
-                    ps.setDouble(10, toSave.getSalePricePerAlcoholUnit());
+                    ps.setDouble(10, toSave.getSalePricePerAlcoholLiter());
 
                 }
 

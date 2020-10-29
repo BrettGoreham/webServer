@@ -23,14 +23,14 @@ import java.util.stream.Collectors;
 public class VinmonopoletProcessor {
 
 
-    private VinmonopoletIntegration vinmonopoletIntegration;
-    private VinmonopoletBatchDao vinmonopoletBatchDao;
-    private int pageSize;
-    private int overallSizeList;
-    private int categorySizeList;
+    private final VinmonopoletIntegration vinmonopoletIntegration;
+    private final VinmonopoletBatchDao vinmonopoletBatchDao;
+    private final int pageSize;
+    private final int overallSizeList;
+    private final int categorySizeList;
 
-    private final String COMPLETE = "COMPLETE";
-    private final String FAILED = "FAILED";
+    private final static String COMPLETE = "COMPLETE";
+    private final static String FAILED = "FAILED";
 
     public VinmonopoletProcessor(VinmonopoletIntegration vinmonopoletIntegration,
                                  VinmonopoletBatchDao vinmonopoletBatchDao,
@@ -45,14 +45,12 @@ public class VinmonopoletProcessor {
         this.categorySizeList = categorySizeList;
     }
 
-    @Scheduled(fixedDelay = 1000000000, initialDelay = 1000)
     //seconds minutes hours daysofmonth monthsofyear daysofweek"
-    //@Scheduled(cron = "0 0 20 * * MON-FRI")
+    //vinmonopolet updates at 5:45CET
+    //Server runs in UTC which is 1 hour behind CET so this runs at 6:00CET.
+    @Scheduled(cron = "0 0 6 * * *", zone="GMT+1")
     public void processVinmonopoletData(){
 
-        VinmonopoletBatchJob lastSuccessfulJob = vinmonopoletBatchDao.fetchLastSuccessfulJob();
-
-        //TODO get LastRunAndBatch
         VinmonopoletBatchJob currentBatchJob =
             new VinmonopoletBatchJob(
                 -1,
@@ -72,24 +70,23 @@ public class VinmonopoletProcessor {
 
             resultCountFromVinmonopolet += pageFromVinmonopolet.size();
 
-            System.out.println("results from Vinmonopolet so far: " + resultCountFromVinmonopolet);
-
             List<AlcoholForSale> validAlcoholsToRank = filterOutInvalidResults(pageFromVinmonopolet);
 
             currentBatchJob.addAlcoholsToTopLists(validAlcoholsToRank);
 
-            if (pageFromVinmonopolet.size() < pageSize) {
+            if (pageFromVinmonopolet.size() < pageSize && !currentBatchJob.getStatus().equals(FAILED)) {
                 currentBatchJob.setStatus(COMPLETE);
             }
             isDone = checkForFinishedStatus(currentBatchJob.getStatus());
         }
 
-        if (areThereChangesToTopLists(lastSuccessfulJob, currentBatchJob)) {
+        VinmonopoletBatchJob lastSuccessfulJob = vinmonopoletBatchDao.fetchLastSuccessfulJob();
+
+        if (lastSuccessfulJob == null || areThereChangesToTopLists(lastSuccessfulJob, currentBatchJob)) {
             vinmonopoletBatchDao.saveVinmonopoletBatchJob(currentBatchJob);
         } else {
             vinmonopoletBatchDao.updatePreviousBatchesValidDateToDate(LocalDate.now(), lastSuccessfulJob.getBatchId());
         }
-
     }
 
     private boolean areThereChangesToTopLists(VinmonopoletBatchJob lastSuccessfulJob, VinmonopoletBatchJob currentBatchJob) {
@@ -100,20 +97,21 @@ public class VinmonopoletProcessor {
         }
 
         //in case vinmonopolet changes categories
-        if(lastSuccessfulJob.getCategoryToAlcoholForSalePricePerAlcoholUnit().entrySet().size() != currentBatchJob.getCategoryToAlcoholForSalePricePerAlcoholUnit().entrySet().size()) {
+        if(lastSuccessfulJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet().size() != currentBatchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet().size()) {
             return true;
         }
 
-        for(int i = 0; i <lastSuccessfulJob.getOverallAlcoholForSalePricePerAlcoholUnit().size(); i++) {
 
-            if (! lastSuccessfulJob.getOverallAlcoholForSalePricePerAlcoholUnit().get(i)
-                    .equals(currentBatchJob.getOverallAlcoholForSalePricePerAlcoholUnit().get(i))) {
-                return true; //unmatching value in top list case;
-            }
+        boolean areTopListsTheSame =
+            lastSuccessfulJob.getOverallAlcoholForSalePricePerAlcoholLiter()
+                .containsAll(currentBatchJob.getOverallAlcoholForSalePricePerAlcoholLiter());
+
+        if (!areTopListsTheSame) {
+            return true;
         }
 
-        Map<String, SortedMaxLengthList<AlcoholForSale>> lastCategoryTopLists = lastSuccessfulJob.getCategoryToAlcoholForSalePricePerAlcoholUnit();
-        Map<String, SortedMaxLengthList<AlcoholForSale>> currentCategoryTopLists = currentBatchJob.getCategoryToAlcoholForSalePricePerAlcoholUnit();
+        Map<String, SortedMaxLengthList<AlcoholForSale>> lastCategoryTopLists = lastSuccessfulJob.getCategoryToAlcoholForSalePricePerAlcoholLiter();
+        Map<String, SortedMaxLengthList<AlcoholForSale>> currentCategoryTopLists = currentBatchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter();
 
         for (Map.Entry<String, SortedMaxLengthList<AlcoholForSale>> currentEntry : currentCategoryTopLists.entrySet()) {
 
@@ -124,10 +122,9 @@ public class VinmonopoletProcessor {
                 SortedMaxLengthList<AlcoholForSale> currentList = currentEntry.getValue();
                 SortedMaxLengthList<AlcoholForSale> lastList = lastCategoryTopLists.get(currentEntry.getKey());
 
-                for(int i = 0; i < currentList.size(); i++) {
-                    if(! currentList.get(i).equals(lastList.get(i))) {
-                        return true;
-                    }
+                boolean areListsTheSame = currentList.containsAll(lastList);
+                if (!areListsTheSame) {
+                    return true;
                 }
             }
 
