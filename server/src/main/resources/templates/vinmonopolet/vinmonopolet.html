@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinmonopolet</title>
+</head>
+<body>
+
+<h2 th:text="'Vinmonopolet results from ' + ${batchJob.getLastDateRunWasCheckedAsStillValid()}"></h2>
+
+<h5>The alcohol on this page is ranked by how much each drink costs per liter of pure alcohol in them.</h5>
+
+<div class="darkDiv" style="display: grid; place-items: center;">
+    <label for="date" style="margin: 5px">Check another date: </label>
+    <input id="date" th:value="${date}" type="date" th:min="${firstDate}" th:max="${todaysDate}" style="margin: 5px; background-color: var(--main-neutral-color)"/>
+    <button onclick="goToDate()" style="width: 100px">Go</button>
+</div>
+
+<div>
+    <div style="cursor: pointer" onclick="toggle('overall')" class="darkDiv">
+        <div style="display: flex; flex-wrap: wrap; justify-content: center">
+            <div style="flex: 0 1 150px; margin-right: 10px">
+                <h3>Overall rankings</h3>
+            </div>
+            <div style="flex: 0 1 60px; margin-left: 10px; display: grid; place-items: center">
+                <img id="overallArrow" style="transition: transform 1s; transform: rotate(-90deg); height: 30px; width: 30px;" src="/images/downArrow.png"/>
+            </div>
+        </div>
+
+        <div id="overall" class="formHider">
+            <div onclick="stopPropagation(event)" style="cursor: default" class="borderedDiv" th:each="alcohol : ${batchJob.getOverallAlcoholForSalePricePerAlcoholLiter()}">
+                <div style="display: flex; flex-wrap: wrap; justify-content: center">
+                    <div style="flex: 1 1 400px;">
+                        <img th:src="|${alcohol.getPictureUrl(300, 300)}|">
+                    </div>
+                    <div style="flex: 1 1 200px; display: grid; place-content: center">
+                        <a target="_blank" th:href="|http://${alcohol.getUrlToProduct()}|" th:text="${alcohol.name}"></a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center">
+        <div class="darkDiv" style="flex: 1 1 300px; margin: 10px;" th:each="category : ${batchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet()}">
+            <a th:href="@{/vinmonopolet/{date}/{category}(date=${batchJob.getLastDateRunWasCheckedAsStillValid()}, category=${category.getKey()})}">
+                <h3 th:text="${category.getKey()} + ' rankings'"></h3>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script>
+    function toggle(idToToggle) {
+        let divToHide = document.getElementById(idToToggle);
+        let overallImage = document.getElementById('overallArrow');
+        if (divToHide.style.height === "0px" || divToHide.style.height === "") {
+            divToHide.style.height = divToHide.scrollHeight + 'px'; //auto doesnt work blame css
+
+            overallImage.style.transform = 'rotate(360deg)';
+        } else {
+            divToHide.style.height = "0px";
+            overallImage.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    function stopPropagation(e) {
+        e.stopPropagation();
+    }
+
+    function goToDate(){
+        let date = document.getElementById('date').value;
+
+        window.location.href = "/vinmonopolet/" + date;
+    }
+</script>
+
+</body>
+</html>

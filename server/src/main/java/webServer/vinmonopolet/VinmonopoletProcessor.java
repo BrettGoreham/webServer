@@ -82,55 +82,84 @@ public class VinmonopoletProcessor {
 
         VinmonopoletBatchJob lastSuccessfulJob = vinmonopoletBatchDao.fetchLastSuccessfulJob();
 
-        if (lastSuccessfulJob == null || areThereChangesToTopLists(lastSuccessfulJob, currentBatchJob)) {
+        boolean changesInLists = setRankingChangesInLists(lastSuccessfulJob, currentBatchJob);
+
+        if (changesInLists) {
             vinmonopoletBatchDao.saveVinmonopoletBatchJob(currentBatchJob);
         } else {
             vinmonopoletBatchDao.updatePreviousBatchesValidDateToDate(LocalDate.now(), lastSuccessfulJob.getBatchId());
         }
     }
 
-    private boolean areThereChangesToTopLists(VinmonopoletBatchJob lastSuccessfulJob, VinmonopoletBatchJob currentBatchJob) {
-        //in case i change parameters and want new list to take over.
-        if  (lastSuccessfulJob.getSizeOfOverallTopList() != currentBatchJob.getSizeOfOverallTopList() ||
-                lastSuccessfulJob.getSizeOfCategoryTopList() != currentBatchJob.getSizeOfCategoryTopList()) {
+
+    private boolean setRankingChangesInLists(VinmonopoletBatchJob lastJob, VinmonopoletBatchJob currentJob) {
+        if (lastJob == null) {
             return true;
         }
 
-        //in case vinmonopolet changes categories
-        if(lastSuccessfulJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet().size() != currentBatchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet().size()) {
-            return true;
-        }
+        boolean changeHasOccurred =
+            setRankingChangeInList(
+                lastJob.getOverallAlcoholForSalePricePerAlcoholLiter(),
+                currentJob.getOverallAlcoholForSalePricePerAlcoholLiter()
+            );
 
+        for (Map.Entry<String, SortedMaxLengthList<AlcoholForSale>> entry : currentJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet()) {
+            boolean lastJobHasCategory =
+                lastJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().containsKey(entry.getKey());
 
-        boolean areTopListsTheSame =
-            lastSuccessfulJob.getOverallAlcoholForSalePricePerAlcoholLiter()
-                .containsAll(currentBatchJob.getOverallAlcoholForSalePricePerAlcoholLiter());
+            if (lastJobHasCategory) {
 
-        if (!areTopListsTheSame) {
-            return true;
-        }
+                boolean changeInCategory =
+                    setRankingChangeInList(
+                        lastJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().get(entry.getKey()),
+                        entry.getValue()
+                    );
 
-        Map<String, SortedMaxLengthList<AlcoholForSale>> lastCategoryTopLists = lastSuccessfulJob.getCategoryToAlcoholForSalePricePerAlcoholLiter();
-        Map<String, SortedMaxLengthList<AlcoholForSale>> currentCategoryTopLists = currentBatchJob.getCategoryToAlcoholForSalePricePerAlcoholLiter();
-
-        for (Map.Entry<String, SortedMaxLengthList<AlcoholForSale>> currentEntry : currentCategoryTopLists.entrySet()) {
-
-            if (!lastCategoryTopLists.containsKey(currentEntry.getKey())) {
-               return true; //new category case;
+                changeHasOccurred = changeHasOccurred || changeInCategory;
             }
             else {
-                SortedMaxLengthList<AlcoholForSale> currentList = currentEntry.getValue();
-                SortedMaxLengthList<AlcoholForSale> lastList = lastCategoryTopLists.get(currentEntry.getKey());
-
-                boolean areListsTheSame = currentList.containsAll(lastList);
-                if (!areListsTheSame) {
-                    return true;
-                }
+                changeHasOccurred = true;
             }
-
         }
 
-        return false;
+        return changeHasOccurred;
+    }
+
+    private boolean setRankingChangeInList(SortedMaxLengthList<AlcoholForSale> lastJobList, SortedMaxLengthList<AlcoholForSale> currentJobList) {
+        List<String> lastListOfIds =
+            lastJobList.stream().map(AlcoholForSale::getVinmonopoletProductId).collect(Collectors.toList());
+
+        List<String> currentListOfIds =
+            currentJobList.stream().map(AlcoholForSale::getVinmonopoletProductId).collect(Collectors.toList());
+
+
+        boolean changeHasOccurred = false;
+        for (int i  = 0; i < currentListOfIds.size(); i++) {
+            int lastResult = lastListOfIds.indexOf(currentListOfIds.get(i));
+
+            String change;
+            if (lastResult == -1) {
+                change = "New";
+                changeHasOccurred = true;
+            }
+            else if (lastResult == i){
+                change = "-";
+            }
+            else {
+                int changeInPosition = lastResult - i;
+                if (changeInPosition > 0) {
+                    change = "+ " + changeInPosition;
+                }
+                else {
+                    change = "- " + (-1 * changeInPosition);
+                }
+                changeHasOccurred = true;
+            }
+
+            currentJobList.get(i).setChangeInRanking(change);
+        }
+
+        return changeHasOccurred;
     }
 
     private boolean checkForFinishedStatus(String status) {

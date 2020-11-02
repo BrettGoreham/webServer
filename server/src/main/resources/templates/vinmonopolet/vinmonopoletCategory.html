@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Vinmonopolet: ' + ${category}"></title>
+</head>
+<body>
+
+<div>
+
+    <h2 th:id="${category}" th:text="${category} + ' Rankings for ' + ${date}"></h2>
+
+    <div class="darkDiv" style="display: grid; place-items: center;">
+        <input id="category" th:value="${category}" style="visibility: hidden">
+        <label for="date" style="margin: 5px">Check another date: </label>
+        <input id="date" th:value="${date}" type="date" th:min="${firstDate}" th:max="${todaysDate}" style="margin: 5px; background-color: var(--main-neutral-color)"/>
+        <button onclick="goToDate()" style="width: 100px">Go</button>
+    </div>
+
+    <div  class="borderedDiv" th:each="alcohol : ${topList}">
+        <div style="display: flex; flex-wrap: wrap; justify-content: center">
+            <div style="flex: 1 1 400px;">
+                <img th:src="|${alcohol.getPictureUrl(300, 300)}|">
+            </div>
+            <div style="flex: 1 1 200px; display: grid; place-content: center">
+                <a target="_blank" th:href="|http://${alcohol.getUrlToProduct()}|" th:text="${alcohol.name}"></a>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    function goToDate() {
+        let date = document.getElementById('date').value;
+        let category = document.getElementById('category').value;
+
+        window.location.href = "/vinmonopolet/" + date + "/" + category;
+    }
+</script>
+
+</body>
+</html>

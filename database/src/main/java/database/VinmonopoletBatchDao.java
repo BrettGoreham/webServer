@@ -31,8 +31,8 @@ public class VinmonopoletBatchDao {
 
     private final static String insertIntoTopListRecords =
         "INSERT INTO VINMONOPOLET_BATCH_TOP_LIST_RECORDS " +
-            "(fk_vinmonopoletBatchID, listCategory, vinmonopoletProductId, productName, productCategory, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholLiter) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "(fk_vinmonopoletBatchID, listCategory, vinmonopoletProductId, productName, productCategory, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholLiter, changeInRanking) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
     private final static String updatePreviousBatch =
@@ -53,11 +53,11 @@ public class VinmonopoletBatchDao {
             "WHERE ? BETWEEN b.dateOfRun AND b.lastDateRunWasCheckedAsStillValid " +
             "AND b.status = 'COMPLETE'";
 
+    private final static String getEarliestBatchInDatabase =
+        "SELECT MIN(b.dateOfRun) from VINMONOPOLET_BATCH b" +
+            " where b.status = 'COMPLETE'";
+
     private final static String OVERALL_LIST_CATEGORY_NAME = "OVERALL";
-
-
-    private final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
-
 
     public void saveVinmonopoletBatchJob(VinmonopoletBatchJob vinmonopoletBatchJob) {
 
@@ -86,8 +86,14 @@ public class VinmonopoletBatchDao {
         return mapRowsToVinmonopoletBatch(rows);
     }
 
+    public LocalDate fetchFirstRunDate() {
+        Date date = jdbcTemplate.queryForObject(getEarliestBatchInDatabase, Date.class);
+
+        return date.toLocalDate();
+    }
+
     private VinmonopoletBatchJob mapRowsToVinmonopoletBatch(List<Map<String, Object>> rows) {
-        if(rows.isEmpty()) {
+        if (rows.isEmpty()) {
             return null;
         }
 
@@ -120,6 +126,8 @@ public class VinmonopoletBatchDao {
                 (Double) row.get("alcoholPercentage")
             );
 
+            alcoholForSale.setChangeInRanking((String) row.get("changeInRanking"));
+
             if (row.get("listCategory").equals(OVERALL_LIST_CATEGORY_NAME)) {
                 topList.add(alcoholForSale);
             } else {
@@ -128,7 +136,6 @@ public class VinmonopoletBatchDao {
 
         }
 
-        assert vinmonopoletBatchJob != null;
         vinmonopoletBatchJob.addAlcoholsToTopLists(alcoholForSaleList);
         vinmonopoletBatchJob.setOverallAlcoholForSalePricePerAlcoholLiter(topList);
         //to lazy to add method that doesnt set top list while adding to regular list. so overwriting it above
@@ -189,7 +196,7 @@ public class VinmonopoletBatchDao {
                     ps.setDouble(8, toSave.getAlcoholPercentage());
                     ps.setDouble(9, toSave.getSalePricePerLiter());
                     ps.setDouble(10, toSave.getSalePricePerAlcoholLiter());
-
+                    ps.setString(11, toSave.getChangeInRanking());
                 }
 
                 //(fk_vinmonopoletBatchID, listCategory, vinmonopoletProductId, productName, productCategory, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholUnit)

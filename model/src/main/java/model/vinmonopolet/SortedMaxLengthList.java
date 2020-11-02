@@ -2,7 +2,7 @@ package model.vinmonopolet;
 
 import java.util.*;
 
-public class SortedMaxLengthList<E> implements List {
+public class SortedMaxLengthList<E> implements List<E> {
 
     List<E> list = new ArrayList<>();
     int maxLength;
@@ -88,12 +88,12 @@ public class SortedMaxLengthList<E> implements List {
     }
 
     @Override
-    public Object get(int index) {
+    public E get(int index) {
         return list.get(index);
     }
 
     @Override
-    public Object set(int index, Object element) {
+    public E set(int index, Object element) {
         throw new UnsupportedOperationException();
     }
 
@@ -103,7 +103,7 @@ public class SortedMaxLengthList<E> implements List {
     }
 
     @Override
-    public Object remove(int index) {
+    public E remove(int index) {
         return list.remove(index);
     }
 

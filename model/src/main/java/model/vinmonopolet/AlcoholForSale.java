@@ -17,6 +17,8 @@ public class AlcoholForSale {
     private double salePricePerLiter;
     private double salePricePerAlcoholLiter;
 
+    private String changeInRanking;
+
 
     public AlcoholForSale(
         String name,
@@ -37,6 +39,8 @@ public class AlcoholForSale {
 
         this.salePricePerLiter = salePrice / saleVolume;
         this.salePricePerAlcoholLiter = salePricePerLiter / (alcoholPercentage / 100);
+
+        this.changeInRanking = "-";
 
     }
 
@@ -112,7 +116,15 @@ public class AlcoholForSale {
         this.salePricePerAlcoholLiter = salePricePerAlcoholLiter;
     }
 
-    public String generateUrlToProduct() {
+    public String getChangeInRanking() {
+        return changeInRanking;
+    }
+
+    public void setChangeInRanking(String changeInRanking) {
+        this.changeInRanking = changeInRanking;
+    }
+
+    public String getUrlToProduct() {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("vinmonopolet.no/p/");
@@ -121,7 +133,7 @@ public class AlcoholForSale {
         return "vinmonopolet.no/p/" + vinmonopoletProductId;
     }
 
-    public String generatePictureUrl(int height, int width) {
+    public String getPictureUrl(int height, int width) {
         return "https://bilder.vinmonopolet.no/cache/" + width + "x" + height + "-0/" + vinmonopoletProductId + "-1.jpg";
     }
 
@@ -148,6 +160,18 @@ public class AlcoholForSale {
     @Override
     public int hashCode() {
         return Objects.hash(name, category, vinmonopoletProductId, salePrice, saleVolume, alcoholPercentage, salePricePerLiter, salePricePerAlcoholLiter);
+    }
+
+    public AlcoholForSale deepCopy() {
+        return new AlcoholForSale(
+            this.name,
+            this.category,
+            this.vinmonopoletProductId,
+            this.saleStatus,
+            this.salePrice,
+            this.saleVolume,
+            this.alcoholPercentage
+        );
     }
 }
 

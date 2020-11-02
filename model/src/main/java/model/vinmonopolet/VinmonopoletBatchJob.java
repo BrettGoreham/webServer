@@ -46,7 +46,7 @@ public class VinmonopoletBatchJob {
 
 
         overallAlcoholForSalePricePerAlcoholLiter = new SortedMaxLengthList<>(sizeOfOverallTopList, alcoholForSaleComparator);
-        categoryToAlcoholForSalePricePerAlcoholLiter = new HashMap<>();
+        categoryToAlcoholForSalePricePerAlcoholLiter = new TreeMap<>(); // want output to be in alphabetical order in regards to category.
     }
 
     public void addAlcoholsToTopLists(List<AlcoholForSale> alcoholsToAdd) {
