@@ -5,12 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="'Vinmonopolet: ' + ${category}"></title>
+
+    <style>
+        p {
+            font-weight: normal;
+        }
+    </style>
 </head>
 <body>
 
 <div>
 
-    <h2 th:id="${category}" th:text="${category} + ' Rankings for ' + ${date}"></h2>
+    <h1 th:id="${category}" th:text="${category} + ' Rankings for ' + ${date}"></h1>
 
     <div class="darkDiv" style="display: grid; place-items: center;">
         <input id="category" th:value="${category}" style="visibility: hidden">
@@ -19,17 +25,54 @@
         <button onclick="goToDate()" style="width: 100px">Go</button>
     </div>
 
-    <div  class="borderedDiv" th:each="alcohol : ${topList}">
+    <div style="cursor: pointer" th:onclick="'toggle(' + ${iter.index} + ')'" class="borderedDiv" th:each="alcohol, iter : ${topList}">
         <div style="display: flex; flex-wrap: wrap; justify-content: center">
-            <div style="flex: 1 1 400px;">
-                <img th:src="|${alcohol.getPictureUrl(300, 300)}|">
+            <div style="flex: 0 1 20px; display: grid; place-content: center">
+                <h3 th:text="${iter.index} + 1 + '.' "></h3>
             </div>
-            <div style="flex: 1 1 200px; display: grid; place-content: center">
-                <a target="_blank" th:href="|http://${alcohol.getUrlToProduct()}|" th:text="${alcohol.name}"></a>
+            <div onclick="stopPropagation(event)" style="flex: 0 1 350px; display: grid; place-content: center">
+                <a target="_blank" th:href="|http://${alcohol.getUrlToProduct()}|">
+                    <h3 th:text="${alcohol.getName()}"></h3>
+                </a>
+            </div>
+
+            <div style="flex: 0 1 300px; margin-left: 10px">
+                <h3 th:text="'Change In Ranking: ' + ${alcohol.getChangeInRanking()}"></h3>
+            </div>
+
+            <div style="flex: 0 1 60px; margin-left: 10px; display: grid; place-items: center">
+                <img th:id="${iter.index} + 'overallArrow'" style="transition: transform 1s; transform: rotate(-90deg); height: 30px; width: 30px;" src="/images/downArrow.png"/>
+            </div>
+        </div>
+
+        <div th:id="${iter.index}" class="formHider" onclick="stopPropagation(event)" style="cursor: default">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center">
+                <div style="flex: 1 1 500px; margin: 10px" class="results darkDiv">
+                    <h4>Info</h4>
+                    <div style="display: flex; flex-wrap: wrap">
+                        <div style="flex: 1 1 250px; display: grid; place-content: center">
+                            <p th:text="'Price: ' + ${#numbers.formatDecimal(alcohol.getSalePrice(), 1, 2)}"></p>
+                        </div>
+                        <div style="flex: 1 1 250px; display: grid; place-content: center">
+                            <p th:text="'Volumn Sold In (L): ' + ${alcohol.getSaleVolume()} "></p>
+                        </div>
+                        <div style="flex: 1 1 250px; display: grid; place-content: center">
+                            <p th:text="'Alcohol Percentage: ' + ${alcohol.getAlcoholPercentage()} + '%'"></p>
+                        </div>
+                        <div style="flex: 1 1 250px; display: grid; place-content: center">
+                            <p th:text="'Sale Price Per Liter: ' + ${#numbers.formatDecimal(alcohol.getSalePricePerLiter(), 1, 2)}"></p>
+                        </div>
+                        <div style="flex: 1 1 250px; display: grid; place-content: center">
+                            <p><b  th:text="'Sale Price Per Liter Of Pure Alcohol: ' + ${#numbers.formatDecimal(alcohol.getSalePricePerAlcoholLiter(), 1, 2)}"></b></p>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 1 1 350px; margin: 10px" class="darkDiv">
+                    <img th:src="|${alcohol.getPictureUrl(300, 300)}|">
+                </div>
             </div>
         </div>
     </div>
-
 </div>
 <script>
     function goToDate() {
@@ -37,6 +80,23 @@
         let category = document.getElementById('category').value;
 
         window.location.href = "/vinmonopolet/" + date + "/" + category;
+    }
+
+    function toggle(idToToggle) {
+        let divToHide = document.getElementById(idToToggle);
+        let overallImage = document.getElementById(idToToggle + 'overallArrow');
+        if (divToHide.style.height === "0px" || divToHide.style.height === "") {
+            divToHide.style.height = divToHide.scrollHeight + 'px'; //auto doesnt work blame css
+
+            overallImage.style.transform = 'rotate(360deg)';
+        } else {
+            divToHide.style.height = "0px";
+            overallImage.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    function stopPropagation(e) {
+        e.stopPropagation();
     }
 </script>
 
