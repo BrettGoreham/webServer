@@ -73,11 +73,17 @@ public class VinmonopoletRestServlet {
 
     @GetMapping("info/categories")
     public List<String> getListOfCategories() {
-        return vinmonopoletBatchDao.fetchAllCategoriesInDatabase();
+        List<String> toReturn = vinmonopoletBatchDao.fetchAllCategoriesInDatabase();
+
+        toReturn.sort(String::compareTo);
+        return toReturn;
     }
 
     @GetMapping("info/categories/{date}")
     public List<String> getListOfCategoriesFromDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @NotNull Date date) {
-        return vinmonopoletBatchDao.fetchAllCatgoriesFromDate(date);
+        List<String> toReturn = vinmonopoletBatchDao.fetchAllCatgoriesFromDate(date);
+
+        toReturn.sort(String::compareTo);
+        return toReturn;
     }
 }
