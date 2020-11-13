@@ -52,7 +52,7 @@
                     </div>
 
                     <div style="flex: 0 1 60px; margin-left: 10px; display: grid; place-items: center">
-                        <img th:id="${iter.index} + 'overallArrow'" style="transition: transform 1s; transform: rotate(-90deg); height: 30px; width: 30px;" src="/images/downArrow.png"/>
+                        <img th:id="${iter.index} + 'Arrow'" style="transition: transform 1s; transform: rotate(-90deg); height: 30px; width: 30px;" src="/images/downArrow.png"/>
                     </div>
                 </div>
 
@@ -65,7 +65,7 @@
                                     <p th:text="'Price: ' + ${#numbers.formatDecimal(alcohol.getSalePrice(), 1, 2)}"></p>
                                 </div>
                                 <div style="flex: 1 1 250px; display: grid; place-content: center">
-                                    <p th:text="'Volumn Sold In (L): ' + ${alcohol.getSaleVolume()} "></p>
+                                    <p th:text="'Volumn Sold as: ' + ${alcohol.getSaleVolume()} + 'L' "></p>
                                 </div>
                                 <div style="flex: 1 1 250px; display: grid; place-content: center">
                                     <p th:text="'Alcohol Percentage: ' + ${alcohol.getAlcoholPercentage()} + '%'"></p>
@@ -103,12 +103,19 @@
 
 
 <script>
+
+    let overallDiv =  document.getElementById('overall');
+
+    //overallDiv.addEventListener("transitionend",  setHeightToAuto);
+
+    //function setHeightToAuto() {
+    //    overallDiv.style.height = "auto";
+    //}
     function overAllToggle() {
         let divToHide = document.getElementById('overall');
         let overallImage = document.getElementById('overallArrow');
         if (divToHide.style.height === "0px" || divToHide.style.height === "") {
             divToHide.style.height = divToHide.scrollHeight + 'px'; //auto doesnt work blame css
-
             overallImage.style.transform = 'rotate(360deg)';
         } else {
             divToHide.style.height = "0px";
@@ -118,16 +125,24 @@
 
     function toggle(idToToggle) {
         let divToHide = document.getElementById(idToToggle);
-        let overallImage = document.getElementById(idToToggle + 'overallArrow');
+        let overallImage = document.getElementById(idToToggle + 'Arrow');
+
+        let changeInHeight = divToHide.scrollHeight;
         if (divToHide.style.height === "0px" || divToHide.style.height === "") {
             divToHide.style.height = divToHide.scrollHeight + 'px'; //auto doesnt work blame css
-
             overallImage.style.transform = 'rotate(360deg)';
         } else {
+            changeInHeight = -1 * changeInHeight;
             divToHide.style.height = "0px";
             overallImage.style.transform = 'rotate(-90deg)';
         }
+
+        let overallDiv = document.getElementById('overall');
+        overallDiv.style.height = (overallDiv.clientHeight + changeInHeight) + 'px';
+        // since not auto required to make it grow when options are opened.
+        // with auto it kills the css transition
     }
+
 
     function stopPropagation(e) {
         e.stopPropagation();

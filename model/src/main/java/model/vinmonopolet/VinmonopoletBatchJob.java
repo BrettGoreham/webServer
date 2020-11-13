@@ -51,7 +51,8 @@ public class VinmonopoletBatchJob {
 
     public void addAlcoholsToTopLists(List<AlcoholForSale> alcoholsToAdd) {
         for (AlcoholForSale alcoholForSale : alcoholsToAdd) {
-            overallAlcoholForSalePricePerAlcoholLiter.add(alcoholForSale);
+            //deep copy is important here to keep change in ranking independent
+            overallAlcoholForSalePricePerAlcoholLiter.add(alcoholForSale.deepCopy());
 
             SortedMaxLengthList<AlcoholForSale> categoryTopList =
                 categoryToAlcoholForSalePricePerAlcoholLiter.getOrDefault(alcoholForSale.getCategory(), new SortedMaxLengthList<>(sizeOfCategoryTopList, alcoholForSaleComparator));
