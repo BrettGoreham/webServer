@@ -5,7 +5,6 @@ import model.vinmonopolet.SortedMaxLengthList;
 import model.vinmonopolet.VinmonopoletBatchJob;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -57,6 +55,21 @@ public class VinmonopoletBatchDao {
         "SELECT MIN(b.dateOfRun) from VINMONOPOLET_BATCH b" +
             " where b.status = 'COMPLETE'";
 
+    private final static String getLatestBatchInDatabase =
+        "SELECT MAX(b.lastDateRunWasCheckedAsStillValid) from VINMONOPOLET_BATCH b" +
+            " where b.status = 'COMPLETE'";
+
+    private final static String getAllCategoriesEver =
+        "SELECT DISTINCT btlr.productCategory FROM VINMONOPOLET_BATCH_TOP_LIST_RECORDS btlr";
+
+    private final static String getAllCategoriesFromDate =
+        "Select Distinct btlr.productCategory " +
+            "FROM VINMONOPOLET_BATCH b " +
+            "LEFT JOIN VINMONOPOLET_BATCH_TOP_LIST_RECORDS btlr " +
+                "ON b.batchID = btlr.fk_vinmonopoletBatchID " +
+                "WHERE ? BETWEEN b.dateOfRun AND b.lastDateRunWasCheckedAsStillValid " +
+                "AND b.status = 'COMPLETE'";
+
     private final static String OVERALL_LIST_CATEGORY_NAME = "OVERALL";
 
     public void saveVinmonopoletBatchJob(VinmonopoletBatchJob vinmonopoletBatchJob) {
@@ -90,6 +103,20 @@ public class VinmonopoletBatchDao {
         Date date = jdbcTemplate.queryForObject(getEarliestBatchInDatabase, Date.class);
 
         return date.toLocalDate();
+    }
+
+    public LocalDate fetchLastRunDate() {
+        Date date = jdbcTemplate.queryForObject(getLatestBatchInDatabase, Date.class);
+
+        return date.toLocalDate();
+    }
+
+    public List<String> fetchAllCategoriesInDatabase() {
+        return jdbcTemplate.queryForList(getAllCategoriesEver, String.class);
+    }
+
+    public List<String> fetchAllCatgoriesFromDate(java.util.Date date) {
+        return jdbcTemplate.queryForList(getAllCategoriesFromDate, String.class, Date.from(date.toInstant()));
     }
 
     private VinmonopoletBatchJob mapRowsToVinmonopoletBatch(List<Map<String, Object>> rows) {
