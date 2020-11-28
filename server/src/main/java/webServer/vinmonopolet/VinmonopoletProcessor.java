@@ -15,7 +15,6 @@ import vinmonopolet.restclient.ApiException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,6 +24,7 @@ public class VinmonopoletProcessor {
 
     private final VinmonopoletIntegration vinmonopoletIntegration;
     private final VinmonopoletBatchDao vinmonopoletBatchDao;
+    private final VinmonopoletService vinmonopoletService;
     private final int pageSize;
     private final int overallSizeList;
     private final int categorySizeList;
@@ -34,12 +34,14 @@ public class VinmonopoletProcessor {
 
     public VinmonopoletProcessor(VinmonopoletIntegration vinmonopoletIntegration,
                                  VinmonopoletBatchDao vinmonopoletBatchDao,
+                                 VinmonopoletService vinmonopoletService,
                                  @Value("${vinmonopolet.pageSize}") int pageSize,
                                  @Value("${vinmonopolet.overallSizeList}") int overallSizeList,
                                  @Value("${vinmonopolet.categorySizeList}") int categorySizeList) {
 
         this.vinmonopoletIntegration = vinmonopoletIntegration;
         this.vinmonopoletBatchDao = vinmonopoletBatchDao;
+        this.vinmonopoletService = vinmonopoletService;
         this.pageSize = pageSize;
         this.overallSizeList = overallSizeList;
         this.categorySizeList = categorySizeList;
@@ -82,84 +84,13 @@ public class VinmonopoletProcessor {
 
         VinmonopoletBatchJob lastSuccessfulJob = vinmonopoletBatchDao.fetchLastSuccessfulJob();
 
-        boolean changesInLists = setRankingChangesInLists(lastSuccessfulJob, currentBatchJob);
+        boolean changesInLists = vinmonopoletService.setRankingChangesInLists(lastSuccessfulJob, currentBatchJob);
 
         if (changesInLists) {
             vinmonopoletBatchDao.saveVinmonopoletBatchJob(currentBatchJob);
         } else {
             vinmonopoletBatchDao.updatePreviousBatchesValidDateToDate(LocalDate.now(), lastSuccessfulJob.getBatchId());
         }
-    }
-
-
-    private boolean setRankingChangesInLists(VinmonopoletBatchJob lastJob, VinmonopoletBatchJob currentJob) {
-        if (lastJob == null) {
-            return true;
-        }
-
-        boolean changeHasOccurred =
-            setRankingChangeInList(
-                lastJob.getOverallAlcoholForSalePricePerAlcoholLiter(),
-                currentJob.getOverallAlcoholForSalePricePerAlcoholLiter()
-            );
-
-        for (Map.Entry<String, SortedMaxLengthList<AlcoholForSale>> entry : currentJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().entrySet()) {
-            boolean lastJobHasCategory =
-                lastJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().containsKey(entry.getKey());
-
-            if (lastJobHasCategory) {
-
-                boolean changeInCategory =
-                    setRankingChangeInList(
-                        lastJob.getCategoryToAlcoholForSalePricePerAlcoholLiter().get(entry.getKey()),
-                        entry.getValue()
-                    );
-
-                changeHasOccurred = changeHasOccurred || changeInCategory;
-            }
-            else {
-                changeHasOccurred = true;
-            }
-        }
-
-        return changeHasOccurred;
-    }
-
-    private boolean setRankingChangeInList(SortedMaxLengthList<AlcoholForSale> lastJobList, SortedMaxLengthList<AlcoholForSale> currentJobList) {
-        List<String> lastListOfIds =
-            lastJobList.stream().map(AlcoholForSale::getVinmonopoletProductId).collect(Collectors.toList());
-
-        List<String> currentListOfIds =
-            currentJobList.stream().map(AlcoholForSale::getVinmonopoletProductId).collect(Collectors.toList());
-
-
-        boolean changeHasOccurred = false;
-        for (int i  = 0; i < currentListOfIds.size(); i++) {
-            int lastResult = lastListOfIds.indexOf(currentListOfIds.get(i));
-
-            String change;
-            if (lastResult == -1) {
-                change = "New";
-                changeHasOccurred = true;
-            }
-            else if (lastResult == i){
-                change = "-";
-            }
-            else {
-                int changeInPosition = lastResult - i;
-                if (changeInPosition > 0) {
-                    change = "+ " + changeInPosition;
-                }
-                else {
-                    change = "- " + (-1 * changeInPosition);
-                }
-                changeHasOccurred = true;
-            }
-
-            currentJobList.get(i).setChangeInRanking(change);
-        }
-
-        return changeHasOccurred;
     }
 
     private boolean checkForFinishedStatus(String status) {
@@ -172,6 +103,7 @@ public class VinmonopoletProcessor {
             .filter(alcoholForSale -> alcoholForSale.getAlcoholPercentage() > 0)
             .filter(alcoholForSale -> !alcoholForSale.getCategory().toLowerCase().contains("alkoholfri"))
             .filter(alcoholForSale ->  !alcoholForSale.getSaleStatus().toLowerCase().contains("utsolgt"))
+            .filter(alcoholForSale -> !alcoholForSale.getSaleStatus().toLowerCase().contains("utgått"))
             .collect(Collectors.toList());
     }
 

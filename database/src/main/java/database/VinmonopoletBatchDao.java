@@ -51,6 +51,20 @@ public class VinmonopoletBatchDao {
             "WHERE ? BETWEEN b.dateOfRun AND b.lastDateRunWasCheckedAsStillValid " +
             "AND b.status = 'COMPLETE'";
 
+    private final static String getBatchById =
+        "SELECT * FROM VINMONOPOLET_BATCH b " +
+            "LEFT JOIN VINMONOPOLET_BATCH_TOP_LIST_RECORDS btlr " +
+            "ON b.batchID = btlr.fk_vinmonopoletBatchID " +
+            "WHERE b.batchID = ? " +
+            "AND b.status = 'COMPLETE'";
+
+    private final static String getBatchBeforeDate =
+        "SELECT * FROM VINMONOPOLET_BATCH b " +
+            "LEFT JOIN VINMONOPOLET_BATCH_TOP_LIST_RECORDS btlr " +
+            "ON b.batchID = btlr.fk_vinmonopoletBatchID " +
+            "WHERE b.dateOfRun = (SELECT MAX(bd.dateOfRun) FROM VINMONOPOLET_BATCH bd WHERE bd.dateOfRun < ?) " +
+            "AND b.status = 'COMPLETE'";
+
     private final static String getEarliestBatchInDatabase =
         "SELECT MIN(b.dateOfRun) from VINMONOPOLET_BATCH b" +
             " where b.status = 'COMPLETE'";
@@ -95,6 +109,18 @@ public class VinmonopoletBatchDao {
     public VinmonopoletBatchJob fetchBatchJobFromDate(java.util.Date date) {
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(getBatchBetweenDates, Date.from(date.toInstant()));
+
+        return mapRowsToVinmonopoletBatch(rows);
+    }
+
+    public VinmonopoletBatchJob fetchBatchJobFromId(long batchId) {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(getBatchById, batchId);
+
+        return mapRowsToVinmonopoletBatch(rows);
+    }
+
+    public VinmonopoletBatchJob fetchBatchBeforeBatch(VinmonopoletBatchJob mostRecentBatch) {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(getBatchBeforeDate, mostRecentBatch.getDateOfRun());
 
         return mapRowsToVinmonopoletBatch(rows);
     }
@@ -235,4 +261,6 @@ public class VinmonopoletBatchDao {
         }
 
     }
+
+
 }
