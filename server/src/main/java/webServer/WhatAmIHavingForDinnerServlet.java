@@ -40,11 +40,11 @@ public class WhatAmIHavingForDinnerServlet {
         List<MealCategory> meals = whatIsForDinnerService.getMealCategories(true);
 
         Comparator<MealCategory> mealCategoryComparator = Comparator.comparing(MealCategory::getCategoryName);
-        Collections.sort(meals, mealCategoryComparator);
+        meals.sort(mealCategoryComparator);
 
         Comparator<MealOption> mealOptionComparator = Comparator.comparing(MealOption::getMealName);
         for(MealCategory meal : meals) {
-            Collections.sort(meal.getMealOptions(), mealOptionComparator);
+            meal.getMealOptions().sort(mealOptionComparator);
         }
 
         model.addAttribute("mealCategories", meals);

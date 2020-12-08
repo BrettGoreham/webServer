@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Result</title>
+</head>
+<body>
+
+<h3>Word Search Result</h3>
+
+<button onclick="toggle(this)" >Search Again</button>
+<div id="searchForm" th:insert="~{words/searchForm :: wordSearchForm}" class="formHider">
+</div>
+
+<h4 th:text="'Results with: ' + ${selectedLanguage} + ', ' + ${input} + ', ' + ${minLength}"></h4>
+<div class="autoColumnGrid">
+    <div class="darkDiv" th:each="groupOfWords : ${words}">
+        <h5 th:text="'Length of ' + ${#strings.replace(groupOfWords.get(0),'''','').length()}"></h5>
+        <div class="autoSmallColumnGrid">
+            <div class="borderedDiv" th:each="word : ${groupOfWords}" >
+                <label style="display: inline-block" th:text="${word}" />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    function toggle(button) {
+        let searchFormDiv = document.getElementById("searchForm");
+        if (searchFormDiv.style.height === "0px" || searchFormDiv.style.height === "") {
+            searchFormDiv.style.height = searchFormDiv.scrollHeight + 'px'; //auto doesnt work blame css
+            button.innerHTML = "Hide";
+        } else {
+            searchFormDiv.style.height = "0px";
+            button.innerHTML = "Search Again";
+        }
+    }
+</script>
+</body>
+</html>

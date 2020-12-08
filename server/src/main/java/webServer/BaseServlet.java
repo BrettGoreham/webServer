@@ -24,11 +24,6 @@ public class BaseServlet {
     @Autowired
     private RecaptchaValidationService recaptchaValidationService;
 
-    @RequestMapping("/")
-    public RedirectView index() {
-        return new RedirectView("/whatIsForDinner");
-    }
-
     @PostMapping("/emailPost")
     public String  emailPost(@RequestParam String recaptchaCode, @RequestParam String email, @RequestParam String subject, @RequestParam String content) {
         Boolean isRecaptchaValid = recaptchaValidationService.checkRecaptchaString(recaptchaCode);

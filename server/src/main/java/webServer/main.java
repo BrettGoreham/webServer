@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 @SpringBootApplication
 @EnableScheduling
-@ComponentScan(basePackages = { "webServer","database"})
+@ComponentScan(basePackages = { "webServer", "database", "integration"})
 public class main {
 
     public static void main(String[] args) {
