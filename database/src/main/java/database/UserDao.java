@@ -6,10 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
@@ -20,8 +23,20 @@ public class UserDao {
 
     static final String insertUser = "INSERT INTO USERS (username, password, email, role_list) VALUES (?, ?, ?, ?);";
     static final String selectUserByUserName = "select * from USERS where username = ?;";
-
+    static final String createUserConfirmationToken = "INSERT INTO USER_CONFIRMATION_TOKENS(fk_user, token) VALUES (?, ?);";
+    static final String getUserToConfirmationFromToken = "SELECT fk_user FROM USER_CONFIRMATION_TOKENS where token = ?";
+    static final String enableUser = "UPDATE USERS set enabled = 1 where id = ?";
+    static final String deleteTokenByUserId = "DELETE FROM USER_CONFIRMATION_TOKENS where fk_user = ?";
     /**
+     * CREATE TABLE USER_CONFIRMATION_TOKENS(
+     *     id INT NOT NULL AUTO_INCREMENT,
+     *     fk_user INT NOT NULL,
+     *     token VARCHAR(36) NOT NULL,
+     *     registration_time DATETIME NOT NULL,
+     *     CONSTRAINT UC_user_id_fk UNIQUE (fk_user),
+     *     PRIMARY KEY (id),
+     *     FOREIGN KEY (fk_user) REFERENCES USERS(id)
+     * )
      *  id INT NOT NULL AUTO_INCREMENT,
      *     username VARCHAR(20) NOT NULL,
      *     password VARCHAR(60) NOT NULL,
@@ -30,9 +45,6 @@ public class UserDao {
      *     enabled boolean DEFAULT 0,
      *
      */
-    public User getUserById() {
-        return new User();
-    }
 
     public User getUserByUsername(String username){
 
@@ -45,26 +57,72 @@ public class UserDao {
                     rs.getString("username"),
                     rs.getString("password"),
                     rs.getString("email"),
+                    rs.getBoolean("enabled"),
                     DatabaseUtil.splitCommaDelimatedStringFromDatabase(
                         rs.getString("role_list")
-                    ).stream().map(x -> Roles.valueOf(x)).collect(Collectors.toList())
+                    ).stream().map(Roles::valueOf).collect(Collectors.toList())
                 )
         );
     }
 
-    public void createUser(User user) {
-        jdbcTemplate.update(connection -> {
+    public int createUser(User user) {
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(
+            connection -> {
                 PreparedStatement ps = connection
-                    .prepareStatement(insertUser);
+                        .prepareStatement(insertUser, Statement.RETURN_GENERATED_KEYS);
 
                 ps.setString(1, user.getUsername());
                 ps.setString(2, user.getPassword());
                 ps.setString(3, user.getEmail());
                 ps.setString(4, DatabaseUtil.createCommaDelimatedStringForDatabase(user.getRoles()));
                 return ps;
-            }
+            },
+            keyHolder
         );
+
+        return keyHolder.getKey().intValue();
     }
 
 
+    public String createConfirmationToken(int userId) {
+        String token = UUID.randomUUID().toString();
+
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection
+                            .prepareStatement(createUserConfirmationToken);
+
+                    ps.setInt(1, userId);
+                    ps.setString(2, token);
+                    return ps;
+                }
+        );
+
+        return token;
+    }
+
+    public Integer getUserByConfirmationToken(String token) {
+        return jdbcTemplate.queryForObject(getUserToConfirmationFromToken, Integer.class, token);
+    }
+
+    public void enableUserAndDeleteConfirmationToken(int userId) {
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(enableUser);
+
+            ps.setInt(1, userId);
+            return ps;
+        });
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(deleteTokenByUserId);
+
+            ps.setInt(1, userId);
+            return ps;
+        });
+    }
 }

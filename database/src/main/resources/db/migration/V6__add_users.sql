@@ -15,8 +15,8 @@ CREATE TABLE USER_CONFIRMATION_TOKENS(
     id INT NOT NULL AUTO_INCREMENT,
     fk_user INT NOT NULL,
     token VARCHAR(36) NOT NULL,
-    registration_time DATETIME NOT NULL,
-    CONSTRAINT UC_user_id_fk UNIQUE (username),
+    registration_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UC_user_id_fk UNIQUE (fk_user),
     PRIMARY KEY (id),
     FOREIGN KEY (fk_user) REFERENCES USERS(id)
 )

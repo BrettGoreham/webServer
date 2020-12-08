@@ -18,14 +18,14 @@ public class LoginController {
 
     @GetMapping(value = "")
     public String showLoginPage() {
-        return "login";
+        return "userManagement/login";
     }
 
     @GetMapping(value = "/loginFailed")
     public String loginError(Model model) {
 
         model.addAttribute("error", "true");
-        return "login";
+        return "userManagement/login";
     }
 
     @GetMapping(value = "/logout")

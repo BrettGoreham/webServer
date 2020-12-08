@@ -74,11 +74,10 @@ public class ScheduledEmails {
 
     }
 
-    public void sendEmailToToEmailAddr(String subject, String content) {
-
+    public void sendEmail(String subject, String content, String emailAddress) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmailAddr);
-        message.setTo(toEmailAddr);
+        message.setTo(emailAddress);
         message.setSubject(subject);
         message.setText(content);
         try {
@@ -87,6 +86,9 @@ public class ScheduledEmails {
         catch (Exception e) {
             System.out.println(e);
         }
+    }
+    public void sendEmailToToEmailAddr(String subject, String content) {
 
+        sendEmail(subject, content, toEmailAddr);
     }
 }

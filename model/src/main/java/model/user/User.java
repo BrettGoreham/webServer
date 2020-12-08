@@ -8,6 +8,7 @@ public class User {
     private String username;
     private String password;
     private String email;
+    private boolean enabled;
     private List<Roles> roles;
 
     public User() {}
@@ -18,11 +19,12 @@ public class User {
         this.email = email;
     }
 
-    public User (long id, String username, String password, String email, List<Roles> roles) {
+    public User (long id, String username, String password, String email, boolean enabled, List<Roles> roles) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.enabled = enabled;
         this.roles = roles;
     }
 
@@ -57,6 +59,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public List<Roles> getRoles() {
