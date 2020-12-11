@@ -26,14 +26,10 @@ public class UserDetailServiceImpl implements UserDetailsService {
     @Autowired
     private ScheduledEmails scheduledEmails;
 
-    @Value("baseUrl")
-    private String baseUrl;
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        SecurityUserDetails user = new SecurityUserDetails(userDao.getUserByUsername(username));
 
-        return user;
+        return new SecurityUserDetails(userDao.getUserByUsername(username));
     }
 
     public void createAndSaveUser(String username, String password, String email) {
@@ -46,7 +42,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
         String token = userDao.createConfirmationToken(userId);
 
-        scheduledEmails.sendEmail("Please confirm your registration", getContentForConfirmationEmail(token), email);
+        scheduledEmails.sendConfirmationEmail(token, email);
     }
 
     public void confirmRegistration(String token) {
@@ -59,11 +55,15 @@ public class UserDetailServiceImpl implements UserDetailsService {
         userDao.enableUserAndDeleteConfirmationToken(userId);
     }
 
-    private String getContentForConfirmationEmail(String token) {
-        return "Click this link to confirm registration at " + baseUrl + "\n\n" + getConfirmationUrlFromToken(token);
+    /*private String getContentForConfirmationEmail(String token) {
+        return "<div>" +
+                    "<h5>Click this link to confirm registration at " + baseUrl + "</h5>" +
+                    "<br/><br/>"  +
+                    "<a href=\""+ getConfirmationUrlFromToken(token) +  "\">Click here to confirm account</a>" +
+                "</div>" ;
     }
 
     private String getConfirmationUrlFromToken(String token) {
         return baseUrl + "/register/confirmation?token=" + token;
-    }
+    }*/
 }

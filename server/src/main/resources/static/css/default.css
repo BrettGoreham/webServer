@@ -21,9 +21,7 @@ html {
 
 body {
     background-color: var(--main-bg-color);
-    /*width: 100%;*/
     max-width: 100%;
-    /*min-height: 100%;*/
 }
 footer {
     text-align: center;
@@ -127,4 +125,13 @@ div .darkDiv{
     max-width: 100%;
     margin-right: 20px;
     margin-left: 20px;
+}
+
+.minContent {
+    width: min-content;
+}
+
+.centerContent {
+    display: grid;
+    place-items: center;
 }

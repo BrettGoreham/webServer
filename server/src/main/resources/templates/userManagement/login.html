@@ -1,19 +1,29 @@
 <!DOCTYPE html>
-<html>
-    <body>
-        <div class="panel-body">
-            <form action="doLogin" method="post">
-                <fieldset>
-                    <legend>Please sign in</legend>
-                    <div>
-                        <input placeholder="User Name" name='username' type="text">
-                    </div>
-                    <div >
-                        <input placeholder="Password" name='password' type="password" value="">
-                    </div>
-                    <input class="btn" type="submit" value="Login">
-                </fieldset>
-            </form>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <title>Login</title>
+</head>
+<body>
+    <div class="centerContent" th:if="${error != null}">
+        <div class="darkDiv minContent" style="border: 3px solid red;">
+            <h3  th:text="${error}" style="color: red; white-space: nowrap"></h3>
         </div>
-    </body>
+    </div>
+
+    <div class="panel-body">
+        <form action="doLogin" method="post">
+            <fieldset>
+                <legend>Please sign in</legend>
+                <div>
+                    <input placeholder="User Name" name='username' type="text">
+                </div>
+                <div >
+                    <input placeholder="Password" name='password' type="password" value="">
+                </div>
+                <input class="btn" type="submit" value="Login">
+            </fieldset>
+        </form>
+    </div>
+</body>
 </html>

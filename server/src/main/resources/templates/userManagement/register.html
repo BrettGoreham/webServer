@@ -1,22 +1,56 @@
 <!DOCTYPE html>
-<html>
-    <body>
-        <div class="panel-body">
-            <form action="/register/submit" method="post">
-                <fieldset>
-                    <legend>Please sign in</legend>
-                    <div>
-                        <input minlength="1" placeholder="User Name" name='username' type="text">
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta charset="UTF-8">
+    <title>Register!</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        #g-recaptcha-response {
+            display: block !important;
+            position: absolute;
+            margin: -78px 0 0 0 !important;
+            width: 302px !important;
+            height: 76px !important;
+            z-index: -999999;
+            opacity: 0;
+        }
+    </style>
+    <script>
+        function captchaCallBack(value) {
+            var captchaValue = document.getElementById("captchaValue");
+            captchaValue.value = value
+        }
+    </script>
+</head>
+<body>
+    <h3 th:if="${error != null}" th:text="${error}" style="color: red;"></h3>
+    <div class="panel-body">
+        <form action="/register/submit" method="post">
+            <fieldset>
+                <legend>Registration Form</legend>
+                <div>
+                    <input minlength="1" placeholder="User Name" name='username' type="text" required>
+                </div>
+                <div>
+                    <input minlength="5" placeholder="Password" name='password' type="password" value="" required>
+                </div>
+                <div>
+                    <input placeholder="Email" name="email" type="email"  required value="">
+                </div>
+                <input id="captchaValue" name="captchaValue" type="text" minlength="1" required style="display: none;">
+                <div class="centerDiv">
+                    <div class="g-recaptcha"
+                         data-callback="captchaCallBack"
+                         data-theme="dark"
+                         th:attr="data-sitekey=${@environment.getProperty('recaptcha.site.key')}"
+                         required>
                     </div>
-                    <div>
-                        <input minlength="5" placeholder="Password" name='password' type="password" value="">
-                    </div>
-                    <div>
-                        <input placeholder="Email" name="email" type="email" value="">
-                    </div>
-                    <input class="btn" type="submit" value="Register">
-                </fieldset>
-            </form>
-        </div>
-    </body>
+                </div>
+                <input class="btn" type="submit" value="Register" >
+            </fieldset>
+        </form>
+    </div>
+</body>
 </html>

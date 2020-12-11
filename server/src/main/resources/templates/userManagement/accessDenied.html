@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta charset="UTF-8">
+    <title>AccessDenied</title>
+</head>
+<body>
+
+<div class="darkDiv">
+    <h2>Access Denied</h2>
+    <h4>You do not seem to have access to the resource you were attempting to access</h4>
+    <h4 th:text="'If you believe this is an error please email ' + ${email}"></h4>
+</div>
+
+
+
+</body>
+</html>
