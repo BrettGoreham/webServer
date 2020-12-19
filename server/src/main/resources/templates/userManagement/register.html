@@ -41,12 +41,12 @@
                     <input placeholder="Email" name="email" type="email"  required value="">
                 </div>
                 <input id="captchaValue" name="captchaValue" type="text" minlength="1" required style="display: none;">
-                <div class="centerDiv">
+                <div class="centerContent">
                     <div class="g-recaptcha"
                          data-callback="captchaCallBack"
                          data-theme="dark"
                          th:attr="data-sitekey=${@environment.getProperty('recaptcha.site.key')}"
-                         required>
+                         style="width: min-content">
                     </div>
                 </div>
                 <input class="btn" type="submit" value="Register" >
