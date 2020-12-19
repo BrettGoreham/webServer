@@ -1,16 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head>
     <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>User Detail</title>
 </head>
 <body>
-    <h3>User Details</h3>
+    <div class="darkDiv">
+        <h3>User Details</h3>
 
-    <div>
-        <h5 th:text="'User Name ' + ${userName}"/>
-        <h5 th:text="'Email ' +  ${email}"/>
+        <div>
+            <h5 th:text="'User Name ' + ${userName}"/>
+            <h5 th:text="'Email ' +  ${email}"/>
+        </div>
+
+        <div sec:authorize="hasRole('ADMIN')" class="centerContent">
+            <h5>Links For Admin</h5>
+            <a href="/admin" >Admin Console</a>
+        </div>
     </div>
+
 </body>
 </html>

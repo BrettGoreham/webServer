@@ -85,6 +85,14 @@ div .borderedDiv {
     border-radius: 5px;
 }
 
+div .neutralDiv {
+    background-color: var(--main-neutral-color);
+    text-align: center;
+    padding: 12px 0px;
+    margin: 8px 0;
+    border-radius: 5px;
+}
+
 div .darkDiv{
     background-color: var(--main-light-color);
     text-align: center;
@@ -134,4 +142,40 @@ div .darkDiv{
 .centerContent {
     display: grid;
     place-items: center;
+}
+
+
+#toastsContainer {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    width: 100%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    display: grid;
+    place-items: center;
+}
+
+.toastContainer {
+    font-weight: bold;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    min-width: 450px
+}
+
+.toastContainerSuccess {
+    border: 3px solid #99ff33;
+}
+
+.toastContainerError {
+    border: 3px solid #ff1a1a;
+}
+
+.toastHeader {
+
+}
+
+.toastContent {
+  margin-top: 10px;
 }

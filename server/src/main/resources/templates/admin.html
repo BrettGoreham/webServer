@@ -1,6 +1,137 @@
 <!DOCTYPE html>
-<html>
-    <body>
-        <h1>adddminnnn</h1>
-    </body>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+
+    <style>
+        .modal {
+            display:    none;
+            position:   fixed;
+            z-index:    1000;
+            top:        0;
+            left:       0;
+            height:     100%;
+            width:      100%;
+            background: rgba( 255, 255, 255, .8 )
+                        url('http://i.stack.imgur.com/FhHRx.gif')
+                        50% 50%
+                        no-repeat;
+        }
+
+        body.loading .modal {
+            overflow: hidden;
+        }
+
+
+        body.loading .modal {
+            display: block;
+        }
+    </style>
+    <script type="text/javascript" src="/js/toastMaker.js"></script>
+</head>
+<body>
+    <script>
+
+        function collectAndSendForUpdate() {
+            let checkedOptions = document.querySelectorAll('input[class=toConfirm]:checked');
+            let action = document.querySelector('input[name="mode"]:checked').value
+
+            if (checkedOptions.length == 0) {
+                createErrorToast("No options selected to confirm");
+            }
+            else {
+                document.body.classList.add("loading");
+
+                var xhr =  new XMLHttpRequest();
+                xhr.timeout = 10000;
+                xhr.open('POST', '/admin/rest/acceptCategory');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        if (xhr.responseURL.endsWith("login")) {
+                            createErrorToast("You have been logged off :(")
+                        } else {
+                            removeOptionsAfterAcceptCategory(
+                                JSON.parse(xhr.responseText),
+                                action
+                            );
+                        }
+                    }
+                    else {
+                        createErrorToast("failed to save");
+                    }
+
+                    document.body.classList.remove("loading")
+                };
+
+
+                xhr.ontimeout = () => {
+                    createErrorToast("Failed to reach server")
+                    document.body.classList.remove("loading")
+                };
+                xhr.onerror = xhr.ontimeout
+                xhr.send(getJsonForAcceptCategory(checkedOptions, action));
+            }
+        }
+
+        function getJsonForAcceptCategory(checkedOptions, action) {
+            let checkedValues = []
+            for(var i=0; i < checkedOptions.length; i++){
+                checkedValues.push(checkedOptions[i].value);
+            }
+
+            let json = {}
+            json.action = action
+            json.ids = checkedValues
+
+            return JSON.stringify(json)
+        }
+
+
+        function removeOptionsAfterAcceptCategory(listOfCategoriesChanged, change) {
+            let namesOfAccepted = []
+
+            for (let i = 0; i < listOfCategoriesChanged.length; i++) {
+                let element = document.getElementById(listOfCategoriesChanged[i]);
+                namesOfAccepted.push(element.children[0].name)
+                element.parentNode.removeChild(element)
+            }
+
+            createSuccessToast("The following categories have been  " + change + "\n" + namesOfAccepted)
+        }
+    </script>
+    <h1>Admin Panel</h1>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center">
+        <div class="darkDiv" style="flex: 1 0 500px;">
+            <h3>Unconfirmed categories to be confirmed or denied</h3>
+            <div class="centerContent">
+                <div>
+                    <label>
+                        <input type="radio" name="mode" value="CONFIRMED" checked> Confirm
+                    </label>
+                    <label>
+                        <input type="radio" name="mode" value="DENIED"> Deny
+                    </label>
+                </div>
+            </div>
+            <div class="borderedDiv">
+                <ul>
+                    <li style="width: 350px; text-align: left;" th:each="category : ${unconfirmed}" th:id="${category.id}">
+                        <input type="checkbox" class="toConfirm" th:name="${category.categoryName}" th:value="${category.id}">
+                        <label th:text="${category.categoryName}"></label>
+                    </li>
+                </ul>
+            </div>
+            <button onclick="collectAndSendForUpdate()">Save</button>
+        </div>
+    </div>
+
+
+    <div id="toastsContainer"></div>
+    <div class="modal"><!-- Place at bottom of page --></div>
+</body>
 </html>
