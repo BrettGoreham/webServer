@@ -11,17 +11,17 @@ To migrate the database (currently very hacky)
 
 
 Next in the server folder run 
-  spring-boot:run -Dspring.profiles.active=dev 
+  spring-boot:run -Dspring-boot.run.profiles=dev 
 
 This should run the project (localhost:5000).
 
 To create a jar of the project run.
     (in server folder currently.)
-    mvn package spring-boot:repackage.
+    mvn package spring-boot:repackage
    
    This will create a jar in webServer/target/docker/
     That is runnable (example below).
-    java -jar jarFileName.Jar --spring.profiles.active=dev 
+    java -jar jarFileName.Jar --spring-boot.run.profiles=dev 
     
     
 Docker. From the docker file edit it to have the correct release version (from webserver folder)
