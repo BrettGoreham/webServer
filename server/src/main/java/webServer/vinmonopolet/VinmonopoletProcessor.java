@@ -50,9 +50,11 @@ public class VinmonopoletProcessor {
     //seconds minutes hours daysofmonth monthsofyear daysofweek"
     //vinmonopolet updates at 5:45CET
     //Server runs in UTC which is 1 hour behind CET so this runs at 6:00CET.
-    @Scheduled(cron = "0 0 6 * * *", zone="GMT+1")
+    //@Scheduled(cron = "0 0 6 * * *", zone="GMT+1")
+    @Scheduled(fixedDelay = 2000)
     public void processVinmonopoletData(){
 
+        System.out.println("starting Batch For " + LocalDate.now());
         VinmonopoletBatchJob currentBatchJob =
             new VinmonopoletBatchJob(
                 -1,
@@ -79,6 +81,8 @@ public class VinmonopoletProcessor {
             if (pageFromVinmonopolet.size() < pageSize && !currentBatchJob.getStatus().equals(FAILED)) {
                 currentBatchJob.setStatus(COMPLETE);
             }
+
+            System.out.println(resultCountFromVinmonopolet);
             isDone = checkForFinishedStatus(currentBatchJob.getStatus());
         }
 
@@ -91,6 +95,8 @@ public class VinmonopoletProcessor {
         } else {
             vinmonopoletBatchDao.updatePreviousBatchesValidDateToDate(LocalDate.now(), lastSuccessfulJob.getBatchId());
         }
+
+        System.out.println("ending Batch For " + LocalDate.now());
     }
 
     private boolean checkForFinishedStatus(String status) {
