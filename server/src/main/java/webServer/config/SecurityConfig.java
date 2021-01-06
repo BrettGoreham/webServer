@@ -39,14 +39,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(authenticationProvider());
     }
+
+    String[] staticResources  =  {
+            "/css/**",
+            "/images/**",
+            "/js/**",
+            "/favicon.ico"
+    };
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+            .authorizeRequests().antMatchers(staticResources).permitAll()
+            .and()
             .authorizeRequests().antMatchers("/admin/**").hasAnyRole("ADMIN")
             .and()
             .authorizeRequests().antMatchers("/user/**").hasAnyRole("USER")
             .and()
-            .authorizeRequests().antMatchers("/login", "/whatIsForDinner/**", "/dinner/**", "/register/**", "/vinmonopolet/**").permitAll()
+            .authorizeRequests().antMatchers("/", "/login/**", "/whatIsForDinner/**", "/dinner/**", "/register/**", "/vinmonopolet/**", "/rest/**").permitAll()
+            .and()
+            .authorizeRequests().antMatchers("/**").denyAll()
             .and()
             .formLogin().loginPage("/login").usernameParameter("username").passwordParameter("password").permitAll()
             .loginProcessingUrl("/doLogin")
