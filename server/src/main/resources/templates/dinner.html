@@ -634,7 +634,7 @@
                     alert(xmlHttp.responseText);
                 }
             };
-            xmlHttp.open("post", "/emailPost");
+            xmlHttp.open("post", "/rest/emailPost");
             xmlHttp.send(formData);
 
             modal.style.display = "none";

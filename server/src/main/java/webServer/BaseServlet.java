@@ -12,7 +12,7 @@ import webServer.scheduledTasks.ScheduledEmails;
 import java.util.ArrayList;
 import java.util.List;
 
-@RestController
+@RestController("/rest")
 public class BaseServlet {
 
     @Autowired
