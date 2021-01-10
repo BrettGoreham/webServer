@@ -4,24 +4,19 @@ import database.VinmonopoletBatchDao;
 import model.vinmonopolet.AlcoholForSale;
 import model.vinmonopolet.VinmonopoletBatchJob;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import webServer.exceptions.InvalidInputException;
 import webServer.exceptions.NoRecordsFoundException;
 
-import javax.validation.constraints.NotNull;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
-@Validated
 @RestController
 @RequestMapping("/rest/vinmonopolet")
 public class VinmonopoletRestServlet {
@@ -44,7 +39,7 @@ public class VinmonopoletRestServlet {
     }
 
     @GetMapping("/{date}")
-    public VinmonopoletBatchJob get(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @NotNull Date date){
+    public VinmonopoletBatchJob get(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date){
 
         VinmonopoletBatchJob batchJob = vinmonopoletBatchDao.fetchBatchJobFromDate(date);
 
@@ -90,7 +85,7 @@ public class VinmonopoletRestServlet {
     }
 
     @GetMapping("info/categories/{date}")
-    public List<String> getListOfCategoriesFromDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @NotNull Date date) {
+    public List<String> getListOfCategoriesFromDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date) {
         List<String> toReturn = vinmonopoletBatchDao.fetchAllCatgoriesFromDate(date);
 
         toReturn.sort(String::compareTo);
@@ -207,8 +202,8 @@ public class VinmonopoletRestServlet {
 
     @GetMapping("/compare/date")
     public CompareResult getChangeBetweenDates(
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @NotNull Date fromDate,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @NotNull Date toDate
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate
     ) {
 
         if (fromDate.compareTo(toDate) >= 0) {
@@ -228,8 +223,8 @@ public class VinmonopoletRestServlet {
 
     @GetMapping("/compare/id")
     public CompareResult getChangeBetweenIds(
-        @RequestParam @NotNull long lowerId,
-        @RequestParam @NotNull long higherId
+        @RequestParam long lowerId,
+        @RequestParam long higherId
     ) {
         if (lowerId >= higherId) {
             throw new InvalidInputException("lowerId needs to be lower than higherId");
