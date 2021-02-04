@@ -77,6 +77,42 @@
             }
         }
 
+        function startVinmonopoletBatch() {
+            var xhr =  new XMLHttpRequest();
+                xhr.timeout = 10000;
+                xhr.open('POST', '/admin/rest/startVinmonopoletBatch');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        if (xhr.responseURL.endsWith("login")) {
+                            createErrorToast("You have been logged off :(")
+                        } else {
+                            if (xhr.responseText == 'true') {
+                                createSuccessToast("Vinmonopolet Batch successfully started")
+                            }
+                            else {
+                                createErrorToast("Vinmonopolet Batch already running")
+                            }
+                        }
+                    }
+                    else {
+                        createErrorToast("Starting Batch Failed for unknown reason");
+                    }
+
+                    document.body.classList.remove("loading")
+                };
+
+
+                xhr.ontimeout = () => {
+                    createErrorToast("Failed to reach server")
+                    document.body.classList.remove("loading")
+                };
+                xhr.onerror = xhr.ontimeout
+                xhr.send();
+        }
+
+
+
         function getJsonForAcceptCategory(checkedOptions, action) {
             let checkedValues = []
             for(var i=0; i < checkedOptions.length; i++){
@@ -127,6 +163,12 @@
                 </ul>
             </div>
             <button onclick="collectAndSendForUpdate()">Save</button>
+        </div>
+    </div>
+
+    <div id="vinmonopoletBatchStarter">
+        <div class="darkDiv">
+            <button onclick="startVinmonopoletBatch()">Click to start Vinmonopolet Batch</button>
         </div>
     </div>
 

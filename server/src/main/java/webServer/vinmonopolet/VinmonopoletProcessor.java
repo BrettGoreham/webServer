@@ -8,6 +8,7 @@ import model.vinmonopolet.SortedMaxLengthList;
 import model.vinmonopolet.VinmonopoletBatchJob;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import vinmonopolet.restclient.ApiException;
@@ -15,12 +16,14 @@ import vinmonopolet.restclient.ApiException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 @Component
 @Profile("vinmonopoletBatch")
 public class VinmonopoletProcessor {
 
+    private final Semaphore semaphore;
     private final VinmonopoletIntegration vinmonopoletIntegration;
     private final VinmonopoletBatchDao vinmonopoletBatchDao;
     private final VinmonopoletService vinmonopoletService;
@@ -44,15 +47,63 @@ public class VinmonopoletProcessor {
         this.pageSize = pageSize;
         this.overallSizeList = overallSizeList;
         this.categorySizeList = categorySizeList;
+        this.semaphore = new Semaphore(1);
+    }
+
+
+    public boolean acquireSemaphore() {
+        return semaphore.tryAcquire();
+    }
+
+    //DO NOT CALL THIS UNLESS SEMAPHORE IS ALREADY ACQUIRED.
+    @Async
+    public void asyncVinmonopoletBatchStarter(){
+        startVinmonopoletBatchIfNotAlreadyRunning("async", true);
     }
 
     //seconds minutes hours daysofmonth monthsofyear daysofweek"
     //vinmonopolet updates at 5:45CET
     //Server runs in UTC which is 1 hour behind CET so this runs at 6:00CET.
     @Scheduled(cron = "0 0 6 * * *", zone="GMT+1")
-    public void processVinmonopoletData(){
+    public void dailyVinmonopoletBatch() {
+        startVinmonopoletBatchIfNotAlreadyRunning("daily", false);
 
-        System.out.println("starting Batch For " + LocalDate.now());
+    }
+
+    private void startVinmonopoletBatchIfNotAlreadyRunning(String descriptor, boolean isSemaphoreAcquired) {
+        // want to avoid running two batches at once so i dont call vinmonopolet too much.
+        // they limit to 60 calls a minute which this wont even get close to reaching unless like 30 are running
+
+        if (!isSemaphoreAcquired) {
+            isSemaphoreAcquired = acquireSemaphore();
+        }
+
+        if (isSemaphoreAcquired) {
+            System.out.println("starting " + descriptor + " batch for: " + LocalDate.now());
+            try {
+                for (int i = 0; i<10; i++) {
+                  System.out.println(i);
+                  Thread.sleep(1000);
+                }
+                //processVinmonopoletData();
+            }
+            catch (Exception e) {
+                System.out.println("Exception when running batch: " + e);
+            }
+            finally {
+                semaphore.release();
+            }
+            System.out.println("ending " +  descriptor + " Batch For " + LocalDate.now());
+        }
+        else {
+            System.out.println("Vinmonopolet batch failed to start semaphore already taken");
+        }
+
+    }
+
+    private void processVinmonopoletData(){
+
+
         VinmonopoletBatchJob currentBatchJob =
             new VinmonopoletBatchJob(
                 -1,
@@ -93,8 +144,6 @@ public class VinmonopoletProcessor {
         } else {
             vinmonopoletBatchDao.updatePreviousBatchesValidDateToDate(LocalDate.now(), lastSuccessfulJob.getBatchId());
         }
-
-        System.out.println("ending Batch For " + LocalDate.now());
     }
 
     private boolean checkForFinishedStatus(String status) {
