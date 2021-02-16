@@ -81,11 +81,7 @@ public class VinmonopoletProcessor {
         if (isSemaphoreAcquired) {
             System.out.println("starting " + descriptor + " batch for: " + LocalDate.now());
             try {
-                for (int i = 0; i<10; i++) {
-                  System.out.println(i);
-                  Thread.sleep(1000);
-                }
-                //processVinmonopoletData();
+                processVinmonopoletData();
             }
             catch (Exception e) {
                 System.out.println("Exception when running batch: " + e);

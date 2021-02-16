@@ -78,7 +78,9 @@
         }
 
         function startVinmonopoletBatch() {
-            var xhr =  new XMLHttpRequest();
+            let isChecked = document.getElementById("vinmonopoletStartCheck").checked
+            if (isChecked) {
+                var xhr =  new XMLHttpRequest();
                 xhr.timeout = 10000;
                 xhr.open('POST', '/admin/rest/startVinmonopoletBatch');
                 xhr.setRequestHeader('Content-Type', 'application/json');
@@ -109,6 +111,12 @@
                 };
                 xhr.onerror = xhr.ontimeout
                 xhr.send();
+
+                document.getElementById("vinmonopoletStartCheck").checked = false
+            }
+            else {
+                createErrorToast("Please confirm you want to run batch.")
+            }
         }
 
 
@@ -155,12 +163,20 @@
                 </div>
             </div>
             <div class="borderedDiv">
-                <ul>
-                    <li style="width: 350px; text-align: left;" th:each="category : ${unconfirmed}" th:id="${category.id}">
-                        <input type="checkbox" class="toConfirm" th:name="${category.categoryName}" th:value="${category.id}">
-                        <label th:text="${category.categoryName}"></label>
-                    </li>
-                </ul>
+                <div th:switch="${unconfirmed.isEmpty()}">
+                    <div th:case="${true}">
+                        <h3>No suggested meals left to handle</h3>
+                    </div>
+                    <div th:case="${false}" class="centerContent">
+                        <ul>
+                            <li style="width: 350px; text-align: left;" th:each="category : ${unconfirmed}" th:id="${category.id}">
+                                <input type="checkbox" class="toConfirm" th:name="${category.categoryName}" th:value="${category.id}">
+                                <label th:text="${category.categoryName}"></label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
             <button onclick="collectAndSendForUpdate()">Save</button>
         </div>
@@ -168,7 +184,11 @@
 
     <div id="vinmonopoletBatchStarter">
         <div class="darkDiv">
+            <h3>Vinmonpolet Batch</h3></h1>
+
+            <label>Are you sure you want to start this</label><input type="checkbox" id="vinmonopoletStartCheck">
             <button onclick="startVinmonopoletBatch()">Click to start Vinmonopolet Batch</button>
+
         </div>
     </div>
 
