@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>User Detail</title>
+
+    <script type="text/javascript" src="/js/toastMaker.js"></script>
 </head>
 <body>
     <div class="darkDiv">
@@ -15,11 +17,210 @@
             <h5 th:text="'Email ' +  ${email}"/>
         </div>
 
+        <div class="borderedDiv">
+            <h3>API KEY</h3>
+            <div th:switch="${apiKey != null}" id="apiKeyParent">
+                <div id="apiKeyDiv" th:case="${true}">
+                    <div>
+                        <label>Api Key: </label>
+                        <label id="apiKey" th:text="${apiKey}"></label>
+                    </div>
+                    <div>
+                        <button id="copyButton" style="width: max-content; display:inline-block;">Copy To Clipboard</button>
+                        <button onclick="generateApiKey()" style="width: max-content; display:inline-block;">Invalidate And Regenerate</button>
+                        <button onclick="deleteApiKey()" style="width: max-content; display:inline-block;">Delete Key</button>
+                    </div>
+                </div>
+                <div th:case="${false}" class="centerContent">
+                    <button onclick="generateApiKey()" style="width: max-content;">Create API Key</button>
+                </div>
+            </div>
+        </div>
+
+
         <div sec:authorize="hasRole('ADMIN')" class="centerContent">
             <h5>Links For Admin</h5>
             <a href="/admin" >Admin Console</a>
         </div>
     </div>
 
+
+
+    <div id="toastsContainer"></div>
+    <div th:replace="~{loadingModal :: loadingModal}"><!-- Place at bottom of page --></div>
+
+
+    <script>
+
+        function addCopyButtonClick(element) {
+            element.addEventListener("click", function () {
+                var apiKeyLabel = document.getElementById("apiKey");
+
+                let tempInput = document.createElement("input")
+                tempInput.value = apiKeyLabel.innerHTML
+
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+
+                createSuccessToast("Api Key has been saved to the clipboard")
+            });
+        }
+
+        //this is done this way because browsers make it have to happen this way
+        if(document.getElementById("copyButton") != null) {
+            addCopyButtonClick(document.getElementById("copyButton"))
+        }
+
+
+        //****start generate api*****************************************************************************************
+        function generateApiKey() {
+            beginLoading()
+            var xhr =  new XMLHttpRequest();
+                xhr.timeout = 10000;
+                xhr.open('POST', '/user/rest/generateApiKey');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        if (xhr.responseURL.endsWith("login")) {
+                            createErrorToast("You have been logged off :(")
+                        } else {
+                            updateOrCreateApiKeyDiv(xhr.responseText);
+                            createSuccessToast("Api key Created :)")
+                        }
+                    }
+                    else {
+                        createErrorToast("failed to save");
+                    }
+
+                    endLoading()
+                };
+
+
+                xhr.ontimeout = () => {
+                    createErrorToast("Failed to reach server")
+                    endLoading()
+                };
+                xhr.onerror = xhr.ontimeout
+                xhr.send();
+        }
+
+        function updateOrCreateApiKeyDiv(apiKey) {
+            let apiKeyDiv = document.getElementById("apiKeyDiv")
+
+            if (apiKeyDiv == null) {
+                createApiKeyExistingUi(apiKey);
+            }
+            else {
+                document.getElementById("apiKey").innerHTML = apiKey
+            }
+        }
+
+        function createApiKeyExistingUi(apiKeyText) {
+            let apiKeyParent = document.getElementById("apiKeyParent")
+            removeAllChildren(apiKeyParent)
+
+            let label = document.createElement("label")
+            label.innerHTML = "Api Key: "
+
+            let apiKey = document.createElement("label")
+            apiKey.innerHTML = apiKeyText
+            apiKey.id = "apiKey"
+
+            let labelDiv = document.createElement("div")
+            labelDiv.appendChild(label)
+            labelDiv.appendChild(apiKey)
+
+            let copyButton = document.createElement("button")
+            copyButton.style = "width: max-content; display:inline-block;"
+            copyButton.textContent = "Copy To Clipboard"
+            addCopyButtonClick(copyButton)
+
+            let generateButton = document.createElement("button")
+            generateButton.style = "width: max-content; display:inline-block;"
+            generateButton.textContent = "Invalidate And Regenerate"
+            generateButton.addEventListener("click", generateApiKey);
+
+            let deleteButton = document.createElement("button")
+            deleteButton.style = "width: max-content; display:inline-block;"
+            deleteButton.textContent = "Delete Key"
+            deleteButton.addEventListener("click", deleteApiKey);
+
+
+            let buttonDiv = document.createElement("div")
+            buttonDiv.appendChild(copyButton)
+            buttonDiv.appendChild(generateButton)
+            buttonDiv.appendChild(deleteButton)
+
+
+            let div = document.createElement("div")
+            div.id = "apiKeyDiv"
+            apiKeyParent.appendChild(div)
+
+            div.appendChild(labelDiv)
+            div.appendChild(buttonDiv)
+        }
+
+
+        function removeAllChildren(element) {
+            while (element.lastElementChild) {
+                element.removeChild(element.lastElementChild);
+            }
+        }
+
+        //********start delete api******************************************************************************
+        function deleteApiKey() {
+            beginLoading()
+
+            var apiKeyToDelete = document.getElementById("apiKey").innerHTML;
+
+            var xhr =  new XMLHttpRequest();
+            xhr.timeout = 10000;
+            xhr.open('DELETE', '/user/rest/deleteApiKey');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    if (xhr.responseURL.endsWith("login")) {
+                        createErrorToast("You have been logged off :(")
+                    } else {
+
+                        revertToNoKeyGeneratedUi();
+                        createSuccessToast("Api Key successfully deleted.")
+                    }
+                }
+                else {
+                    createErrorToast("failed to save");
+                }
+
+                endLoading()
+            };
+
+
+            xhr.ontimeout = () => {
+                createErrorToast("Failed to reach server")
+                endLoading()
+            };
+            xhr.onerror = xhr.ontimeout
+            xhr.send(JSON.stringify(apiKeyToDelete));
+        }
+
+        function revertToNoKeyGeneratedUi() {
+            let apiKeyParent = document.getElementById("apiKeyParent")
+            removeAllChildren(apiKeyParent)
+
+            let button = document.createElement("button");
+            button.style = "width: max-content;"
+            button.textContent = "Create API Key"
+            button.addEventListener("click", generateApiKey)
+
+            let div = document.createElement("div")
+            div.classList.add("centerContent")
+
+            div.appendChild(button);
+
+            apiKeyParent.appendChild(div);
+        }
+</script>
 </body>
 </html>

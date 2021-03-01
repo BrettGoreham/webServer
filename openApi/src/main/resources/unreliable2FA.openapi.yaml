@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: unreliable2FA
+  description: 2 factor authentication for fun please dont use
+  version: 0.0.1
+
+servers:
+  - url: https://goreham.no/rest/twofactor
+    description: can be found on the internet here
+
+paths:
+  /authenticate:
+    post:
+      summary: authenticates that the passed in code matches the expected 2 factor code. on successful authentication token is deleted
+      requestBody:
+        description: parameters relating to the user and given code
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/authenticateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+    get:
+      summary: generates and passes the token back to the caller. other option in future is to send it directly to the user via email or something.
+      requestBody:
+        description: parameters for generating and saving a token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/generationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "123456"
+
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: GOREHAM-API-KEY
+
+  schemas:
+    authenticateRequest:
+      type: object
+      properties:
+        externalUserId:
+          type: string
+        token:
+          type: string
+      required:
+        - externalUserId
+        - token
+
+    generationRequest:
+      type: object
+      properties:
+        externalUserId:
+          description: external user identifier so caller can identify it in authenticate request
+          type: string
+          minLength: 1
+          maxLength: 20
+        tokenMinutesToLive:
+          description: length of validity for generated token in minutes default 5
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        generationType:
+          description: type of token to be generated default is string
+          type: string
+          enum: [string, int]
+          default: string
+        generationLength:
+          description: length of token to be generated default is 6
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 6
+        returnToken:
+          description: for testing if you would like to receive the token back or if you would like to send it out to the user in a way i cannot
+          type: boolean
+          default: false
+      required:
+        - externalUserId
+
+security:
+  - ApiKeyAuth: []

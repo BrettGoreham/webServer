@@ -55,15 +55,4 @@ public class UserDetailServiceImpl implements UserDetailsService {
         userDao.enableUserAndDeleteConfirmationToken(userId);
     }
 
-    /*private String getContentForConfirmationEmail(String token) {
-        return "<div>" +
-                    "<h5>Click this link to confirm registration at " + baseUrl + "</h5>" +
-                    "<br/><br/>"  +
-                    "<a href=\""+ getConfirmationUrlFromToken(token) +  "\">Click here to confirm account</a>" +
-                "</div>" ;
-    }
-
-    private String getConfirmationUrlFromToken(String token) {
-        return baseUrl + "/register/confirmation?token=" + token;
-    }*/
 }

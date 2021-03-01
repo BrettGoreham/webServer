@@ -1,0 +1,21 @@
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<div th:fragment="loadingModal">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/loading.css}" />
+    <script type="text/javascript" src="/js/loadingModal.js"></script>
+
+    <div class="modal background">
+
+    </div>
+    <div class="modal loadingGif darkDiv">
+        <h3>Loading...</h3>
+        <img  src="/gifs/loading.gif" style="width: 300px">
+    </div>
+
+
+</div>
+</body>
+
+</html>

@@ -1,5 +1,7 @@
 package webServer.config;
 
+import database.APIKeyDao;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -35,6 +37,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         authProvider.setUserDetailsService(userDetailsService());
         return authProvider;
     }
+
+    @Bean
+    public FilterRegistrationBean<ApiKeyAuthFilter> apiKeyAuthFilterFilterRegistrationBean(APIKeyDao apiKeyDao) {
+        FilterRegistrationBean<ApiKeyAuthFilter> authFilter = new FilterRegistrationBean<>();
+
+        authFilter.setFilter(new ApiKeyAuthFilter(apiKeyDao));
+
+        authFilter.addUrlPatterns(ApiKeyAuthFilter.pathsToFilterFor);
+
+        return authFilter;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(authenticationProvider());
@@ -42,6 +56,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     String[] staticResources  =  {
             "/css/**",
+            "/gifs/**",
             "/images/**",
             "/js/**",
             "/favicon.ico"
@@ -70,5 +85,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .exceptionHandling().accessDeniedPage("/accessDenied")
             .and()
             .csrf().disable();
+
     }
 }

@@ -1,6 +1,8 @@
 package webServer.userManagement;
 
 
+import database.APIKeyDao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,14 +16,17 @@ import java.security.Principal;
 @RequestMapping("/user")
 public class UserController {
 
+    @Autowired
+    APIKeyDao apiKeyDao;
 
     @GetMapping(value = "")
     public String userDetailsPage(Model model, Principal principal) {
-        if (principal != null) {
-            SecurityUserDetails securityUserDetails = validatePrinciple(principal);
-            model.addAttribute("email", securityUserDetails.getUserDetails().getEmail());
-            model.addAttribute("userName", securityUserDetails.getUsername());
-        }
+
+        SecurityUserDetails securityUserDetails = validatePrinciple(principal);
+        model.addAttribute("email", securityUserDetails.getUserDetails().getEmail());
+        model.addAttribute("userName", securityUserDetails.getUsername());
+
+        model.addAttribute("apiKey", apiKeyDao.getApiKeyForUser(securityUserDetails.getId()));
 
         return "userManagement/userPage";
     }
