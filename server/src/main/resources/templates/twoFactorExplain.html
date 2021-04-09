@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Unreliable Two Factor Authentication</title>
+</head>
+<body>
+    <h3>Unreliable Two Factor Authentication</h3>
+    <div class="centerContent">
+        <div class="darkDiv" style="width: 50%">
+            <h5>What is it?</h5>
+            <p>
+                Unreliable Two Factor Authentication (UTFA) is an Two factor authentication available for free with a user account.
+                It is available to send simple requests to create a token for a given user id and then to authenticate token later.
+                It is not meant to be a production service but it should be sufficient to support testing of two factor authentication UI.
+            </p>
+        </div>
+        <div class="darkDiv" style="width: 50%">
+            <h5>Why is it Unreliable</h5>
+            <p>
+                As this was only developed for fun it is running on a very low powered (and cost) server.
+                While it is available usually 100%, I take no responsibility for downtime and unexpected outages and I may be slow to fix issues.
+
+                With this I also could take the server down at anytime in the future but if anyone is using it I will attempt to notify users.
+            </p>
+        </div>
+        <div class="darkDiv" style="width: 50%">
+            <h5>How do get started</h5>
+
+            <p>
+                To get started you will need to first register as a user: <a href="/register"> register here</a>
+            </p>
+            <p>
+                After Registering you will need to log in and generate an api key to gain access: <a href="/login">Login</a>
+            </p>
+            <p>
+                The api is defined by an Open Api specification file which can be found in the github under the openapi module
+            </p>
+
+            <textarea>
+
+            </textarea>
+
+        </div>
+    </div>
+</body>
+</html>

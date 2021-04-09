@@ -43,6 +43,13 @@ h1, h2, h3, h4, h5
     /*font-weight: bolder;*/
 }
 
+table {
+    border-collapse: separate;
+    border-radius: 5px;
+    background-color: var(--main-neutral-color);
+    border: solid var(--main-bg-color) 2px;
+}
+
 form {
     border-radius: 5px;
     background-color: var(--main-light-color);

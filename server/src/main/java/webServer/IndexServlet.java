@@ -10,4 +10,9 @@ public class IndexServlet {
     public String index() {
         return "index";
     }
+
+    @GetMapping("/twoFactorAuthorization")
+    public String twofa() {
+        return "twoFactorExplain";
+    }
 }

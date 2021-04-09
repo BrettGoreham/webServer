@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>User Detail</title>
+
+    <script type="text/javascript" src="/js/toastMaker.js"></script>
+</head>
+<body>
+<div>
+    <h3>Unreliable Two Factor Authorization User Console</h3>
+</div>
+<div >
+    <div th:switch="${openTokens.size() != 0}" class="darkDiv">
+        <div i th:case="${true}" class="centerContent">
+
+            <table style="width:50%;" >
+                <tr>
+                    <th>External User Id</th>
+                    <th>Token</th>
+                    <th>Expiration Time</th>
+                </tr>
+                <tr th:each="token : ${openTokens}">
+                    <td><span th:text="${token.externalUserId}"></span></td>
+                    <td><span th:text="${token.token}"></span></td>
+                    <td><span th:text="${token.expiryTime}"></span></td>
+                </tr>
+            </table>
+
+        </div>
+        <div  th:case="${false}">
+            <h4>No Tokens active</h4>
+        </div>
+    </div>
+</div>
+<div class="centerContent">
+    <a href="user">Back To User Console</a>
+</div>
+</body>
+</html>

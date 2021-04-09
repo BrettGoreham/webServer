@@ -1,14 +1,18 @@
 package database;
 
-import model.user.User;
+import model.user.TwoFaToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -28,14 +32,13 @@ public class APIKeyDao {
     private final String INSERT_OR_UPDATE_USAGE = "INSERT INTO API_KEY_USAGE (fk_user_id, usage_count, last_usage) VALUES(?, 1, now()) " +
             "ON DUPLICATE KEY UPDATE usage_count = usage_count + 1, last_usage = now();";
 
-
-
     private final String INSERT_NEW_TOKEN = "INSERT INTO TWO_FACTOR_AUTHENTICATION_TOKENS (fk_user_id, token, expiry_time, external_user_id) VALUES(:userId, :token, :expiryTime, :externalUserId) " +
             "ON DUPLICATE KEY UPDATE expiry_time = :expiryTime, token = :token;";
 
     private final String CHECK_TOKEN_EXISTS_AND_NOT_EXPIRED = "SELECT EXISTS(SELECT * FROM TWO_FACTOR_AUTHENTICATION_TOKENS WHERE expiry_time > now() AND fk_user_id = ? AND external_user_id = ? AND token = ?);";
     private final String DELETE_TOKEN = "DELETE FROM TWO_FACTOR_AUTHENTICATION_TOKENS WHERE fk_user_id = ? AND external_user_id = ? AND token = ?;";
 
+    private final String FETCH_ALL_OPEN_TOKENS = "SELECT * FROM TWO_FACTOR_AUTHENTICATION_TOKENS WHERE fk_user_id = ?";
 
     //if a user already has a key this will overwrite that key if not it will create a new record
     public UUID generateAndSaveUniqueApiKey(long userId) {
@@ -89,14 +92,14 @@ public class APIKeyDao {
         jdbcTemplate.update(INSERT_OR_UPDATE_USAGE, userId);
     }
 
-    public void insertToken(long userId, String token, LocalDateTime expiryTime, String externalUserId) {
+    public void insertToken(TwoFaToken twoFaToken) {
         NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("userId", userId);
-        parameters.addValue("token", token);
-        parameters.addValue("expiryTime", expiryTime);
-        parameters.addValue("externalUserId", externalUserId);
+        parameters.addValue("userId", twoFaToken.getUserId());
+        parameters.addValue("token", twoFaToken.getToken());
+        parameters.addValue("expiryTime", twoFaToken.getExpiryTime());
+        parameters.addValue("externalUserId", twoFaToken.getExternalUserId());
 
         namedParameterJdbcTemplate.update(INSERT_NEW_TOKEN, parameters);
     }
@@ -108,6 +111,23 @@ public class APIKeyDao {
             jdbcTemplate.update(DELETE_TOKEN, userId, externalUserId, token);
         }
         return authenticated;
+    }
+
+    public List<TwoFaToken> getAllTokensForUser(long userId) {
+        return jdbcTemplate.query(
+                FETCH_ALL_OPEN_TOKENS,
+                (resultSet, i) -> createTwoFactor(resultSet),
+                userId
+        );
+    }
+
+    private TwoFaToken createTwoFactor(ResultSet resultSet) throws SQLException {
+        return new TwoFaToken(
+                resultSet.getLong("fk_user_id"),
+                resultSet.getString("token"),
+                resultSet.getTimestamp("expiry_time").toLocalDateTime(),
+                resultSet.getString("external_user_id")
+        );
     }
 
 

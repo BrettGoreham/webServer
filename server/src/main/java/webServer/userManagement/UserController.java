@@ -31,6 +31,15 @@ public class UserController {
         return "userManagement/userPage";
     }
 
+    @GetMapping("/twofa")
+    public String getTwoFaPage(Model model, Principal principal) {
+        SecurityUserDetails securityUserDetails = validatePrinciple(principal);
+
+        model.addAttribute("openTokens", apiKeyDao.getAllTokensForUser(securityUserDetails.getId()));
+
+        return "userManagement/twoFa";
+    }
+
     private SecurityUserDetails validatePrinciple(Object principal) {
         if (principal== null) {
 

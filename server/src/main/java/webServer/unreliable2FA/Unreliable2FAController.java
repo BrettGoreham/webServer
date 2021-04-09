@@ -1,6 +1,7 @@
 package webServer.unreliable2FA;
 
 import database.APIKeyDao;
+import model.user.TwoFaToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,10 +45,13 @@ public class Unreliable2FAController extends AuthenticateApiController {
         );
 
         apiKeyDao.insertToken(
-                (long) SecurityContextHolder.getContext().getAuthentication().getPrincipal(),
-                token,
-                LocalDateTime.now().plusMinutes(generationRequest.getTokenMinutesToLive()),
-                generationRequest.getExternalUserId());
+                new TwoFaToken(
+                    (long) SecurityContextHolder.getContext().getAuthentication().getPrincipal(),
+                    token,
+                    LocalDateTime.now().plusMinutes(generationRequest.getTokenMinutesToLive()),
+                    generationRequest.getExternalUserId()
+                )
+        );
 
         if (generationRequest.getReturnToken()) {
             return new ResponseEntity<>(token, HttpStatus.OK);

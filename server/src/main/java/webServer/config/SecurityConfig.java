@@ -71,7 +71,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .and()
             .authorizeRequests().antMatchers("/user/**").hasAnyRole("USER")
             .and()
-            .authorizeRequests().antMatchers("/", "/login/**", "/whatIsForDinner/**", "/dinner/**", "/register/**", "/vinmonopolet/**", "/words/**", "/sprites/**", "/rest/**").permitAll()
+            .authorizeRequests().antMatchers("/", "/twoFactorAuthorization", "/login/**", "/whatIsForDinner/**", "/dinner/**", "/register/**", "/vinmonopolet/**", "/words/**", "/sprites/**", "/rest/**").permitAll()
             .and()
             .authorizeRequests().antMatchers("/**").denyAll()
             .and()

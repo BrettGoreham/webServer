@@ -17,7 +17,7 @@
             <h5 th:text="'Email ' +  ${email}"/>
         </div>
 
-        <div class="borderedDiv">
+        <div class="darkDiv">
             <h3>API KEY</h3>
             <div th:switch="${apiKey != null}" id="apiKeyParent">
                 <div id="apiKeyDiv" th:case="${true}">
@@ -35,6 +35,10 @@
                     <button onclick="generateApiKey()" style="width: max-content;">Create API Key</button>
                 </div>
             </div>
+        </div>
+
+        <div class="centerContent">
+            <a href="user/twofa" >Go to Two Factor Authorization console</a>
         </div>
 
 
