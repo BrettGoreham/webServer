@@ -26,6 +26,7 @@ class spriteCanvas {
 
         this.isDrawing = false;
 
+        this.copiedSection = null;
         this.startOfSegmentX = null; // these are used for drawing lines.
         this.startOfSegmentY = null;
         this.dispatchUndoAvailabilityEvent(false);
@@ -54,7 +55,9 @@ class spriteCanvas {
                 else if (this.mode === "selectArea") {
                     if (this.selectedArea != null) {
                         this.unDrawAreaSelected();
-                        document.body.removeChild(this.resizeButton);
+                        this.SelectedAreaButtons.forEach((button) =>{
+                            document.body.removeChild(button);
+                        });
                     }
 
                     this.selectedArea =
@@ -121,7 +124,7 @@ class spriteCanvas {
                 }
 
                 if (this.mode === "selectArea") {
-                    this.createResizeButtonAtLocation(this.selectedArea);
+                    this.createSelectedAreaButtonsAtLocation();
                 }
 
                 this.endDrawing();
@@ -131,7 +134,7 @@ class spriteCanvas {
         this.canvas.addEventListener('mouseout', e => {
             if (this.isDrawing === true) {
                 if (this.mode === "selectArea") {
-                    this.createResizeButtonAtLocation(this.selectedArea);
+                    this.createSelectedAreaButtonsAtLocation();
                 }
                 this.endDrawing();
             }
@@ -143,7 +146,10 @@ class spriteCanvas {
         let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
 
         this.selectedArea = null;
-        document.body.removeChild(this.resizeButton);
+            
+        this.SelectedAreaButtons.forEach((button) =>{
+            document.body.removeChild(button);
+        });
 
         this.resizeCanvasToNewSize(
             selectedAreaValues.minX,
@@ -198,7 +204,9 @@ class spriteCanvas {
         this.mode = mode;
         if (this.selectedArea != null) {
             this.unDrawAreaSelected();
-            document.body.removeChild(this.resizeButton);
+            this.SelectedAreaButtons.forEach((button) =>{
+                document.body.removeChild(button);
+            });
             this.selectedArea = null;
         }
     }
@@ -230,9 +238,11 @@ class spriteCanvas {
         });
 
         if(this.selectedArea != null) {
-            document.body.removeChild(this.resizeButton);
+            this.SelectedAreaButtons.forEach((button) =>{
+                document.body.removeChild(button);
+            });
             this.drawAroundAreaSelected();
-            this.createResizeButtonAtLocation(this.selectedArea);
+            this.createSelectedAreaButtonsAtLocation();
         }
     }
 
@@ -240,6 +250,47 @@ class spriteCanvas {
         tilesToDraw.forEach((tileToDraw) => {
             this.drawTile(tileToDraw);
         })
+    }
+
+    copySelectedSectionOfTiles() {
+        let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
+
+        this.copiedSection = [];
+        for(var y = selectedAreaValues.minY; y<= selectedAreaValues.maxY; y++) {
+            let row = [];
+            for(var x = selectedAreaValues.minX; x<= selectedAreaValues.maxX; x++){
+                let tileToCopy = this.tilesRows[y][x];
+                row.push(new spriteCanvasTile(x - selectedAreaValues.minX, y - selectedAreaValues.minY, tileToCopy.color, tileToCopy.transparency))        
+            }
+
+            this.copiedSection.push(row);
+        }
+    }
+
+    pasteCopiedSectionToStartOfSelectedSection() {
+        let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
+        let changesToDraw = [];
+
+        for(var y = 0; y < this.copiedSection.length; y++) {
+            for(var x = 0; x < this.copiedSection[y].length; x++) {
+                if(this.isCoordinateInCanvas(selectedAreaValues.minX + x, selectedAreaValues.minY + y)){
+                    
+                    let tileToChange = this.tilesRows[selectedAreaValues.minY + y][selectedAreaValues.minX + x];
+                    let change = this.copiedSection[y][x];
+
+                    if (tileToChange.color != change.color || tileToChange.transparency != change.transparency) {
+                        this.addTileToDrawingChanges(tileToChange);
+                        tileToChange.color = change.color;
+                        tileToChange.transparency = change.transparency;
+
+                        changesToDraw.push(tileToChange);
+                    }
+                }
+            }
+        }
+
+        this.addDrawingChangesToUndoMap("paste");
+        this.drawListOfTiles(changesToDraw);
     }
 
     drawTile(tile) {
@@ -454,6 +505,7 @@ class spriteCanvas {
 
     unDrawAreaSelected() {
         let selectedAreaValues = this.getMinAndMaxXAndYFromSelectedArea();
+        let toRedraw = []
 
         let topLeftX = selectedAreaValues.minX;
         let topLeftY = selectedAreaValues.minY;
@@ -461,47 +513,49 @@ class spriteCanvas {
         let bottomRightY = selectedAreaValues.maxY;
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
-            this.drawTile(this.tilesRows[topLeftY][x]);
-            this.drawTile(this.tilesRows[bottomRightY][x]);
+            toRedraw.push(this.tilesRows[topLeftY][x]);
+            toRedraw.push(this.tilesRows[bottomRightY][x]);
         }
         for(let y = topLeftY; y <= bottomRightY; y++) {
-            this.drawTile(this.tilesRows[y][topLeftX]);
-            this.drawTile(this.tilesRows[y][bottomRightX]);
+            toRedraw.push(this.tilesRows[y][topLeftX]);
+            toRedraw.push(this.tilesRows[y][bottomRightX]);
         }
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
             if (topLeftY + 1 < this.heightInPixels) {
-                this.drawTile(this.tilesRows[topLeftY + 1][x]);
+                toRedraw.push(this.tilesRows[topLeftY + 1][x]);
             }
             if (bottomRightY + 1 < this.heightInPixels) {
-                this.drawTile(this.tilesRows[bottomRightY + 1][x]);
+                toRedraw.push(this.tilesRows[bottomRightY + 1][x]);
             }
         }
         for(let y = topLeftY; y <= bottomRightY; y++) {
             if (topLeftX + 1 < this.widthInPixels) {
-                this.drawTile(this.tilesRows[y][topLeftX + 1]);
+                toRedraw.push(this.tilesRows[y][topLeftX + 1]);
             }
             if (bottomRightX + 1 < this.widthInPixels) {
-                this.drawTile(this.tilesRows[y][bottomRightX + 1]);
+                toRedraw.push(this.tilesRows[y][bottomRightX + 1]);
             }
         }
 
         for (let x = topLeftX; x <= bottomRightX; x++) {
             if (topLeftY - 1 > 0) {
-                this.drawTile(this.tilesRows[topLeftY - 1][x]);
+                toRedraw.push(this.tilesRows[topLeftY - 1][x]);
             }
             if (bottomRightY - 1 > 0) {
-                this.drawTile(this.tilesRows[bottomRightY - 1][x]);
+                toRedraw.push(this.tilesRows[bottomRightY - 1][x]);
             }
         }
         for(let y = topLeftY; y <= bottomRightY; y++) {
             if (topLeftX - 1 > 0) {
-                this.drawTile(this.tilesRows[y][topLeftX - 1]);
+                toRedraw.push(this.tilesRows[y][topLeftX - 1]);
             }
             if (bottomRightX - 1 > 0) {
-                this.drawTile(this.tilesRows[y][bottomRightX - 1]);
+                toRedraw.push(this.tilesRows[y][bottomRightX - 1]);
             }
         }
+
+        this.drawListOfTiles(toRedraw);
     }
 
     isCoordinateInCanvas(x, y) {
@@ -633,25 +687,58 @@ class spriteCanvas {
         }
     }
 
-    createResizeButtonAtLocation(selectedArea) {
+    createSelectedAreaButtonsAtLocation() {
 
-        let xcoord = ((selectedArea[0].x) * this.pixelSize) + this.canvas.offsetLeft;
-        let ycoord = ((selectedArea[0].y) * this.pixelSize) + this.canvas.offsetTop - 30;
+        let minMax = this.getMinAndMaxXAndYFromSelectedArea();
+        let xcoord = ((minMax.minX) * this.pixelSize) + this.canvas.offsetLeft;
+        let ycoord = ((minMax.minY) * this.pixelSize) + this.canvas.offsetTop - 30;
 
-        let button = document.createElement("button");
-        button.innerHTML = "Resize Sprite";
-        button.style.position = 'absolute';
-        button.style.top = ycoord + "px";
-        button.style.left = xcoord + "px";
-
+        this.SelectedAreaButtons = [];
         let spriteCanvas = this;
 
-        button.onclick = function() {
+        let resizeButton = document.createElement("button");
+        resizeButton.innerHTML = "Resize Sprite";
+        resizeButton.style.position = 'absolute';
+        resizeButton.style.top = ycoord + "px";
+        resizeButton.style.left = xcoord + "px";
+
+        resizeButton.onclick = function() {
             functionToResize(spriteCanvas);
         };
-        document.body.appendChild(button);
+        document.body.appendChild(resizeButton);
 
-        this.resizeButton = button;
+        let copyButton = document.createElement("button");
+        copyButton.innerHTML = "Copy";
+        copyButton.style.position = 'absolute';
+        copyButton.style.top =  ycoord + "px";
+        let xOffset = parseInt(resizeButton.offsetWidth) + 10 + parseInt(xcoord);
+        copyButton.style.left =  xOffset + "px";
+
+        copyButton.onclick = function() {
+            functionToCopy(spriteCanvas);
+        };
+        document.body.appendChild(copyButton);
+        
+        if (this.copiedSection != null) {
+
+            let pasteButton = document.createElement("button");
+            pasteButton.innerHTML = "Paste";
+            pasteButton.style.position = 'absolute';
+            pasteButton.style.top = ycoord + "px";
+            xOffset = parseInt(resizeButton.offsetWidth) + parseInt(copyButton.offsetWidth) + 20 + parseInt(xcoord);
+            pasteButton.style.left = xOffset + "px";
+
+            pasteButton.onclick = function() {
+                functionToPaste(spriteCanvas);
+            };
+
+            document.body.appendChild(pasteButton);
+            this.SelectedAreaButtons.push(pasteButton);
+        }
+        
+
+        this.SelectedAreaButtons.push(resizeButton);
+        this.SelectedAreaButtons.push(copyButton);
     }
 
     addDrawingChangesToUndoMap(actionOverride) {
@@ -685,7 +772,7 @@ class spriteCanvas {
             let actionToUndo = undo[0];
             let payloadToUndo = undo[1];
 
-            if (actionToUndo === "draw" || actionToUndo === "line" || actionToUndo === "fill") {
+            if (actionToUndo === "draw" || actionToUndo === "line" || actionToUndo === "fill" || actionToUndo === "paste") {
                 this.resetTilesBackToPreviousColors(payloadToUndo)
                 this.drawListOfTiles(Array.from(payloadToUndo.keys()));
             }
@@ -741,6 +828,14 @@ class spriteCanvasTile {
 
 function functionToResize(spriteCanvas) {
     spriteCanvas.resizeCanvasToSelectedArea();
+}
+
+function functionToCopy(spriteCanvas) {
+    spriteCanvas.copySelectedSectionOfTiles();
+}
+
+function functionToPaste(spriteCanvas) {
+    spriteCanvas.pasteCopiedSectionToStartOfSelectedSection();
 }
 
 // I stole this from stack overflow. if it doesnt work fight me

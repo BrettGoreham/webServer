@@ -2,15 +2,16 @@ package webServer.userManagement;
 
 
 import database.APIKeyDao;
+import database.MealDao;
+import model.user.UserMealCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/user")
@@ -18,6 +19,9 @@ public class UserController {
 
     @Autowired
     APIKeyDao apiKeyDao;
+
+    @Autowired
+    MealDao mealDao;
 
     @GetMapping(value = "")
     public String userDetailsPage(Model model, Principal principal) {
@@ -39,6 +43,32 @@ public class UserController {
 
         return "userManagement/twoFa";
     }
+
+
+    @GetMapping("/meals")
+    public String getMealCollections(Model model, Principal principal) {
+        SecurityUserDetails securityUserDetails = validatePrinciple(principal);
+
+        List<UserMealCollection> mealCollections = mealDao.getAllUserMealCollections(securityUserDetails.user.getId());
+        model.addAttribute("mealCollections", mealCollections);
+        return "userManagement/mealCollections";
+    }
+
+
+
+    @GetMapping("/meals/{mealCollectionId}")
+    public String getMealCollection(@PathVariable(value = "mealCollectionId") int mealCollectionId, Model model, Principal principal) {
+        SecurityUserDetails securityUserDetails = validatePrinciple(principal);
+
+        UserMealCollection mealCollection = mealDao.getUserMealCollection(securityUserDetails.user.getId(), mealCollectionId);
+
+        model.addAttribute("mealCollection", mealCollection);
+        return "userManagement/mealCollection";
+    }
+
+
+
+
 
     private SecurityUserDetails validatePrinciple(Object principal) {
         if (principal== null) {

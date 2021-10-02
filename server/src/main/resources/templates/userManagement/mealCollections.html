@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/mealCollection.css}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Categories</title>
+</head>
+<body>
+<div id="mealCategoryHolder">
+    <div onclick="redirectToMealsPage(this)" class="pointer mealCollection"   th:each="mealCollection : ${mealCollections}"  th:id="${mealCollection.getId()}">
+        <div class="collectionName" th:text="${mealCollection.getCollectionName()}"></div>
+        <button onclick="editMealCollection(event, this)">edit</button>
+        <button onclick="deleteMealCollection(event, this)">delete</button>
+    </div>
+</div>
+
+<div>
+    <button onclick="openModal()">Click me to add a Collection of meals</button>
+</div>
+
+
+<!-- The Modal -->
+<div id="myModal" class="formModal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Create new Meal Collection</H3>
+        <form  id="addMealCollection" action="#" method="POST">
+
+            <label for="mealCollectionName">Meal Collection Name</label>
+            <input type="text" maxlength="255" name="mealCollectionName" id="mealCollectionName">
+
+            <button type="button" onclick="addMealCollection()">Create</button>
+        </form>
+    </div>
+</div>
+
+
+<!-- The Modal -->
+<div id="editModal" class="formModal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Edit Meal Collection</H3>
+        <form  id="editMealCollection" action="#" method="POST">
+            <input type="text" name="id" style="display: none">
+            <label for="mealCollectionName">Meal Collection Name</label>
+            <input type="text" minlength="3" maxlength="255" name="mealCollectionName" id="editedMealCollectionName">
+
+            <button type="button" onclick="submitEditMealCollection()">Submit new name</button>
+        </form>
+    </div>
+</div>
+
+<div th:replace="~{loadingModal :: loadingModal}"><!-- Place at bottom of page --></div>
+<script type="text/javascript" src="/js/mealCollections.js"></script>
+</body>
+</html>
