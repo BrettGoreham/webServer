@@ -216,6 +216,7 @@ function addNewMealAsDiv(jsonResp) {
 
     let checkbox = document.createElement("input")
     checkbox.type = 'checkbox'
+    checkbox.classList.add('disable')
     checkbox.checked = isDisabled
     checkbox.onclick = (e) => toggleMealDisabled(checkbox);
     parentElement.appendChild(checkbox)
@@ -256,6 +257,7 @@ function getMealCollectionId() {
     return document.getElementById("mealCollectionId").value;
 }
 
+var val
 
 function startSelectingShit() {
     let allMeals =  document.getElementsByClassName("mealCollection");
@@ -263,6 +265,7 @@ function startSelectingShit() {
     let nonDisabled = [];
 
     for (let item of allMeals) {
+        val = item
         item.classList.remove("result")
         if(item.getElementsByClassName("disable")[0].checked === false) {
             nonDisabled.push(item.id)
