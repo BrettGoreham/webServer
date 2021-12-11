@@ -11,7 +11,7 @@ public class IndexServlet {
         return "index";
     }
 
-    @GetMapping("/twoFactorAuthorization")
+    @GetMapping("/twoFactorAuthentication")
     public String twofa() {
         return "twoFactorExplain";
     }

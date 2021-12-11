@@ -1,9 +1,8 @@
 package database;
 
-import model.MealCategory;
-import model.MealOption;
-import model.MealOptionRecipe;
-import model.StatusEnum;
+import model.*;
+import model.user.UserMeal;
+import model.user.UserMealCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,7 +12,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import javax.xml.crypto.Data;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -75,6 +73,21 @@ public class MealDao {
     private final static String getCountOfSuggestedOptions = "SELECT meal_name FROM MEAL_OPTIONS WHERE status = 'SUGGESTED'";
 
     private final static String updateOptionDescriptionAndIngredients = "UPDATE MEAL_OPTIONS SET description = :description, main_ingredients = :ingredients WHERE id = :id;";
+
+
+    private final static String getUserMealCollectionS = "SELECT * FROM USER_MEAL_COLLECTION WHERE fk_user_id = ?";
+    private final static String getUserMealsInCollection =
+            "SELECT uc.id, uc.fk_user_id, uc.collection_name, " +
+                "um.id as meal_id, um.meal_name, um.is_disabled, um.fk_collection_id " +
+                "FROM USER_MEAL_COLLECTION uc LEFT JOIN USER_MEALS um " +
+            "ON uc.id = um.fk_collection_id WHERE uc.id = ? AND uc.fk_user_id = ?";
+    private final static String createUserMealCollection = "INSERT INTO USER_MEAL_COLLECTION ( fk_user_id, collection_name) VALUES (?,?)";
+    private final static String deleteUserMealCollection = "DELETE FROM USER_MEAL_COLLECTION WHERE fk_user_id = ? AND id = ?";
+    private final static String updateUserMealCollection = "Update USER_MEAL_COLLECTION set collection_name = ? WHERE fk_user_id = ? AND id = ?";
+    private final static String createUserMeal = "INSERT INTO USER_MEALS (meal_name, is_disabled, fk_collection_id) VALUES (?, ?, ?)";
+    private final static String deleteUserMeal = "DELETE FROM USER_MEALS WHERE id = ?";
+    private final static String updateUserMeal = "Update USER_MEALS set meal_name = ?, is_disabled = ? WHERE id = ?";
+    private final static String updateUserMealDisabledStatus =  "Update USER_MEALS set is_disabled = ? WHERE id = ?";
 
     public List<MealCategory> getAllMealCategories(){
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(getMealCategories);
@@ -189,10 +202,6 @@ public class MealDao {
             }
         });
     }
-
-
-
-
 
     public void updateCategoriesAndOptionsToAStatus(List<Integer> categoryIds, List<Integer> optionIds, StatusEnum statusEnum) {
         if (categoryIds != null && !categoryIds.isEmpty()) {
@@ -311,5 +320,191 @@ public class MealDao {
         jdbcTemplate.update(updateMealOptionRecipe, title, ingredients, instructions, recipeId);
 
         return recipeId;
+    }
+
+    public List<UserMealCollection> getAllUserMealCollections(long userId) {
+        List<Map<String,Object>> resultSet = jdbcTemplate.queryForList(getUserMealCollectionS, userId);
+
+        List<UserMealCollection> mealCollections = new ArrayList<>();
+        for( Map<String,Object> resultMap : resultSet) {
+            UserMealCollection mealCollection = new UserMealCollection();
+            mealCollection.setId((int) resultMap.get("id"));
+            mealCollection.setUserId((int) resultMap.get("fk_user_id"));
+            mealCollection.setCollectionName((String) resultMap.get("collection_name"));
+
+            mealCollections.add(mealCollection);
+        }
+        return mealCollections;
+    }
+
+    public UserMealCollection getUserMealCollection(long userId, int collectionId) {
+
+        List<Map<String,Object>> resultSet = jdbcTemplate.queryForList(getUserMealsInCollection, collectionId, userId);
+
+        UserMealCollection mealCollection = null;
+
+        List<UserMeal> userMeals = new ArrayList<>();
+        for( Map<String,Object> resultMap : resultSet) {
+
+            if(mealCollection == null) {
+                mealCollection = new UserMealCollection();
+                mealCollection.setId((int) resultMap.get("id"));
+                mealCollection.setUserId((int) resultMap.get("fk_user_id"));
+                mealCollection.setCollectionName((String) resultMap.get("collection_name"));
+            }
+
+            if(resultMap.get("meal_id") != null) {
+                UserMeal meal = new UserMeal();
+                meal.setId((int) resultMap.get("meal_id"));
+                meal.setMealName((String) resultMap.get("meal_name"));
+                meal.setIsDisabled(DatabaseUtil.createBooleanFromDatabase((int) resultMap.get("is_disabled")));
+                meal.setCollectionId((int) resultMap.get("fk_collection_id"));
+
+                userMeals.add(meal);
+            }
+
+        }
+
+        if(mealCollection == null) {
+            throw new IllegalArgumentException("No Meal Collection for user with id " + collectionId);
+        }
+
+        mealCollection.setUserMeals(userMeals);
+        return mealCollection;
+    }
+
+    public UserMealCollection createUserMealCollection(long userId, String collectionName) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(createUserMealCollection, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, userId);
+            ps.setString(2, collectionName);
+            return ps;
+        }, keyHolder);
+
+        UserMealCollection created = new UserMealCollection();
+        created.setId(keyHolder.getKey().intValue());
+        created.setCollectionName(collectionName);
+        created.setUserId(userId);
+
+        return created;
+    }
+
+    public void deleteUserMealCollection(long userId, int mealCollectionId) {
+        int rowsEffected = jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(deleteUserMealCollection);
+            ps.setLong(1, userId);
+            ps.setInt(2, mealCollectionId);
+            return ps;
+        });
+
+        if (rowsEffected== 0) {
+           throw new IllegalArgumentException("No matching user meal collection to delete");
+        }
+    }
+
+    public void updateUserMealCollection(long userId, int mealCollectionId, String collectionName) throws IllegalArgumentException {
+        UserMealCollection mealCollection = getUserMealCollection(userId, mealCollectionId);
+
+        if(mealCollection != null) {
+            int rowsEffected = jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection
+                        .prepareStatement(updateUserMealCollection);
+                ps.setString(1, collectionName);
+                ps.setLong(2, userId);
+                ps.setInt(3, mealCollectionId);
+                return ps;
+            });
+            if(rowsEffected == 0) {
+                throw new IllegalArgumentException("no rows effected from update?");
+            }
+        }
+        else {
+            throw new IllegalArgumentException("No Matching meal collection to update");
+        }
+    }
+
+    public UserMeal createUserMeal(long userId, int mealCollectionId, UserMeal meal) {
+
+        UserMealCollection mealCollection = getUserMealCollection(userId, mealCollectionId);
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(createUserMeal, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, meal.getMealName());
+            ps.setInt(2, DatabaseUtil.createBooleanEquivalentIntForDatabase(meal.getIsDisabled()));
+            ps.setInt(3, mealCollectionId);
+            return ps;
+        }, keyHolder);
+
+        meal.setId(keyHolder.getKey().intValue());
+        meal.setCollectionId(mealCollectionId);
+        return meal;
+    }
+
+    public void deleteUserMeal(long userId, int mealCollectionId, int mealId) {
+        UserMealCollection mealCollection = getUserMealCollection(userId, mealCollectionId);
+
+        if (mealCollection.getUserMeals().stream().noneMatch(s -> s.getId() == mealId)) {
+            throw new IllegalArgumentException("no meal in collection exists");
+        }
+        else {
+            int rowsEffected = jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection
+                        .prepareStatement(deleteUserMeal);
+                ps.setLong(1, mealId);
+                return ps;
+            });
+
+            if (rowsEffected== 0) {
+                throw new IllegalArgumentException("No matching user meal collection to delete");
+            }
+        }
+    }
+
+    public void updateUserMeal(long userId, int mealCollectionId, int mealId, UserMeal meal) {
+        UserMealCollection mealCollection = getUserMealCollection(userId, mealCollectionId);
+
+        if (mealCollection.getUserMeals().stream().noneMatch(s -> s.getId() == mealId)) {
+            throw new IllegalArgumentException("no meal in collection exists");
+        }
+        else {
+            int rowsEffected = jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection
+                        .prepareStatement(updateUserMeal);
+                ps.setString(1, meal.getMealName());
+                ps.setInt(2, DatabaseUtil.createBooleanEquivalentIntForDatabase(meal.getIsDisabled()));
+                ps.setLong(3, mealId);
+                return ps;
+            });
+            if (rowsEffected== 0) {
+                throw new IllegalArgumentException("No matching user meal collection to delete");
+            }
+        }
+    }
+
+    public void updateUserMealDisabledStatus(long userId, int mealCollectionId, int mealId, boolean disabled) {
+        UserMealCollection mealCollection = getUserMealCollection(userId, mealCollectionId);
+
+        if (mealCollection.getUserMeals().stream().noneMatch(s -> s.getId() == mealId)) {
+            throw new IllegalArgumentException("no meal in collection exists");
+        }
+        else {
+            int rowsEffected = jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection
+                        .prepareStatement(updateUserMealDisabledStatus);
+                ps.setInt(1, DatabaseUtil.createBooleanEquivalentIntForDatabase(disabled));
+                ps.setLong(2, mealId);
+                return ps;
+            });
+            if (rowsEffected== 0) {
+                throw new IllegalArgumentException("No matching user meal collection to delete");
+            }
+        }
     }
 }
