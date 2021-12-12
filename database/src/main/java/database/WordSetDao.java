@@ -41,10 +41,11 @@ public class WordSetDao {
         List<String> dictionary = new ArrayList<>();
         while (scanner.hasNext()) {
             String line = scanner.nextLine();
+            int wordLength = line.replace("'", "").length();
             if (!line.isBlank()
                 && !line.startsWith("#")
-                && line.length() <= maxLength
-                && line.length() >= minLength) {
+                && wordLength <= maxLength
+                && wordLength >= minLength) {
 
                dictionary.add(line);
             }

@@ -6,6 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ServerWebInputException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,8 +30,16 @@ public class WordsContainingLettersServlet {
     }
 
     @GetMapping(path = "find")
-    public String getWords(@RequestParam String language, @RequestParam String input, @RequestParam(defaultValue = "0") int minLength, Model model) {
-        List<String> words = wordsContainingLettersService.findWordsPossibleWithInputSequence(language, input.replaceAll("\\s","").toLowerCase(), minLength);
+    public String getWords(@RequestParam String language, @RequestParam String input, @RequestParam(defaultValue = "0") int minLength, RedirectAttributes attributes, Model model) {
+        List<String> words;
+        try {
+             words = wordsContainingLettersService.findWordsPossibleWithInputSequence(language, input.replaceAll("\\s","").toLowerCase(), minLength);
+
+        }
+        catch (ServerWebInputException e) {
+            attributes.addFlashAttribute("errorMessage", e.getReason());
+            return "redirect:/words";
+        }
 
         List<List<String>> groupedWords =
             new ArrayList<>(words

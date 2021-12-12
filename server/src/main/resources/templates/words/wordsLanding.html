@@ -9,7 +9,14 @@
 <body>
 
 <h3>Word Finder</h3>
+
 <div th:insert="~{words/searchForm :: wordSearchForm}"></div>
+
+<div class="centerContent" th:if="${errorMessage != null}">
+    <div class="darkDiv minContent" style="border: 3px solid red;">
+        <h3  th:text="${errorMessage}" style="color: red; white-space: nowrap"></h3>
+    </div>
+</div>
 
 </body>
 </html>

@@ -25,11 +25,11 @@ public class WordsContainingLettersServiceTest {
     @Mock
     WordSetDao wordSetDao;
 
-    List<String> words = List.of("word", "words", "word's", "one", "two", "three", "abcdefghijklmnopqrstuvwxyz", "what", "thaw");// this is here until i get a dictionary or make one
+    public static List<String> WORDS = List.of("word", "words", "word's", "one", "two", "three", "abcdefghijklmnopqrstuvwxyz", "what", "thaw");// this is here until i get a dictionary or make one
 
     @BeforeEach
     public void beforeEach(){
-        when(wordSetDao.getWordsForLanguage(any(LanguageCharacterSet.class), anyInt(), anyInt())).thenReturn(words);
+        when(wordSetDao.getWordsForLanguage(any(LanguageCharacterSet.class), anyInt(), anyInt())).thenReturn(WORDS);
     }
 
     @Test
@@ -77,12 +77,48 @@ public class WordsContainingLettersServiceTest {
         Assertions.assertFalse(words.contains("three"));
     }
 
+
+    //question mark denotes a wildcard
+    @Test
+    public void testEnglishWildcardsRemovingRequirementForLetterInWork() {
+        List<String> words = wordsContainingLettersService.findWordsPossibleWithInputSequence("en", "?wo", 0);
+
+        Assertions.assertTrue(words.contains("two"));
+    }
+
+    @Test
+    public void testEnglishMultipleWildcards() {
+        List<String> words = wordsContainingLettersService.findWordsPossibleWithInputSequence("en", "??aw", 0);
+
+        Assertions.assertTrue(words.contains("two"));
+        Assertions.assertTrue(words.contains("what"));
+        Assertions.assertTrue(words.contains("thaw"));
+
+    }
+
+    @Test
+    public void testOnlyWildcardsGetsAllResultsWithLessThanOrEqualToLength() {
+        String wildCardInput = "?????";
+        List<String> words = wordsContainingLettersService.findWordsPossibleWithInputSequence("en", wildCardInput, 0);
+
+        for (String word: WORDS) {
+            if(word.replace("'", "").length() <= wildCardInput.length()) {
+                Assertions.assertTrue(words.contains(word));
+            }
+            else {
+                Assertions.assertFalse(words.contains(word));
+            }
+        }
+
+    }
+
     @Test
     public void testEnglishCombinationsOfTwoAndThree(){
         List<List<String>> combinations = wordsContainingLettersService.findWordCombinationsPossibleWithInputSequence("en", "threetwo", 0, 50);
 
         Assertions.assertTrue(combinations.get(0).containsAll(List.of("two", "three")));
     }
+
 
     @Test
     public void testEnglishCombinationWhenOneOrMoreWordExistsWithSameLetters() {
@@ -93,6 +129,8 @@ public class WordsContainingLettersServiceTest {
         assertThatListContainsListThatContainsExactly(List.of("what", "two"), combinations);
         assertThatListContainsListThatContainsExactly(List.of("thaw", "two"), combinations);
     }
+
+
 
     private void assertThatListContainsListThatContainsExactly(List<String> expectedResult, List<List<String>> resultSet) {
         for (List<String> resultInResultSet : resultSet) {

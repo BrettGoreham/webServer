@@ -22,7 +22,7 @@ public class WordsContainingLettersService {
         LanguageCharacterSet validCharacterSet = getLanguage(language);
         validateInputForCharacterSet(validCharacterSet, input);
 
-        List<WordSet> baseWordSet = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input, minLength, input.length()); //combine dictionary into like words. as they are treated the same.
+        List<WordSet> baseWordSet = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input, minLength, input.length(), 0); //combine dictionary into like words. as they are treated the same.
 
         baseWordSet = groupLikeWordSets(baseWordSet);
 
@@ -58,9 +58,12 @@ public class WordsContainingLettersService {
 
     public List<String> findWordsPossibleWithInputSequence(String language, String input, int minLength) {
         LanguageCharacterSet validCharacterSet = getLanguage(language);
+
+        int wildcards = (int) input.chars().filter(ch -> ch == '?').count();
+        input = input.replace("?", "");
         validateInputForCharacterSet(validCharacterSet, input);
 
-        List<WordSet> possibleWordSets = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input,  minLength, input.length());
+        List<WordSet> possibleWordSets = getAllPossibleWordSetsFromWordDictionary(validCharacterSet, input,  minLength, input.length() + wildcards, wildcards);
 
         return possibleWordSets
             .stream()
@@ -135,7 +138,7 @@ public class WordsContainingLettersService {
 
     }
 
-    private List<WordSet> getAllPossibleWordSetsFromWordDictionary(LanguageCharacterSet languageCharacterSet, String input, int minLength, int maxLength) {
+    private List<WordSet> getAllPossibleWordSetsFromWordDictionary(LanguageCharacterSet languageCharacterSet, String input, int minLength, int maxLength, int wildcards) {
         List<WordSet> wordSets = new ArrayList<>();
 
         char[] inputArray = input.toCharArray();
@@ -152,7 +155,7 @@ public class WordsContainingLettersService {
             Arrays.sort(ar);
             String sorted = String.valueOf(ar);
 
-            if (isWordPossible(sorted, input)) {
+            if (isWordPossible(sorted, input, wildcards)) {
                 wordSets.add(
                     new WordSet(
                         sorted,
@@ -194,7 +197,7 @@ public class WordsContainingLettersService {
     }
 
     //ensure input is sorted before getting here
-    private boolean isWordPossible(String wordToCheck, String input) {
+    private boolean isWordPossible(String wordToCheck, String input, int wildcards) {
 
         int wordSetCount = 0;
         int inputCount = 0;
@@ -209,18 +212,26 @@ public class WordsContainingLettersService {
                 }
             } else if (inputChar < wordSetChar){
                 inputCount++;
-            } else {
+            }
+            else if (wildcards > 0) {
+                wildcards--;
+                wordSetCount++;
+                if(wordSetCount == wordToCheck.length()) {
+                    return true;
+                }
+            }
+            else {
                 return false;
             }
         }
 
-        return false;
+        return wildcards >= wordToCheck.length() - wordSetCount;
     }
 
     private void validateInputForCharacterSet(LanguageCharacterSet validCharacterSet, String input) {
         for(int i = 0; i <input.length(); i++) {
             if (!validCharacterSet.getCharacterSet().contains(input.charAt(i))) {
-                throw new ServerWebInputException("character: "+ input.charAt(i) +" Not in character set for language :"+ validCharacterSet.getLangCode());
+                throw new ServerWebInputException("Character "+ input.charAt(i) +" Not in character set for language :"+ validCharacterSet.getFullName());
             };
         }
     }
@@ -231,7 +242,7 @@ public class WordsContainingLettersService {
         if (languageCharacterSet.isPresent()) {
             return languageCharacterSet.get();
         } else {
-            throw new ServerWebInputException("languageCodeNotFound");
+            throw new ServerWebInputException("Language " + language + " is not found in language set");
         }
     }
 }
