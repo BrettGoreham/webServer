@@ -158,15 +158,15 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.11.3</version>
+            <version>2.14.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
 
     <properties>
         <swagger-annotations-version>1.6.2</swagger-annotations-version>
-        <jersey-version>2.34</jersey-version>
-        <jackson-version>2.11.3</jackson-version>
+        <jersey-version>3.0.4</jersey-version>
+        <jackson-version>2.14.0</jackson-version>
         <jackson-databind-nullable-version>0.2.0</jackson-databind-nullable-version>
         <maven-plugin-version>1.0.0</maven-plugin-version>
         <junit-version>4.8.1</junit-version>
