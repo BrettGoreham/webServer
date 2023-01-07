@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="userHeader">
+        <header style="display: grid; justify-content:  end;">
+            <div sec:authorize="isAuthenticated()">
+                <a href="/user"  class="clickable centerContent" style="display: inline-block; width: fit-content;">
+                    Home
+                </a>
+                <a href="/logout"  class="clickable centerContent" style="display: inline-block; width: fit-content;">
+                    Logout
+                </a>
+            </div>
+            <div sec:authorize="isAnonymous()">
+                <a href="/login"  class="clickable centerContent" style="display: inline-block; width: fit-content;">
+                    Login
+                </a>
+            </div>
+        </header>
+    </div>
+</body>
+
+</html>

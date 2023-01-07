@@ -16,43 +16,48 @@
             <h5 th:text="'User Name ' + ${userName}"/>
             <h5 th:text="'Email ' +  ${email}"/>
         </div>
-
-        <div class="darkDiv">
-            <h3>API KEY</h3>
-            <div th:switch="${apiKey != null}" id="apiKeyParent">
-                <div id="apiKeyDiv" th:case="${true}">
-                    <div>
-                        <label>Api Key: </label>
-                        <label id="apiKey" th:text="${apiKey}"></label>
+        
+        <div class="autoColumnGrid" style="align-content: center">
+            
+            <div sec:authorize="hasRole('ADMIN')">
+                <a href="/admin" style="text-align: center">
+                    <div class="borderedDiv">
+                        <h5>Admin Console</h5>
                     </div>
-                    <div>
-                        <button id="copyButton" style="width: max-content; display:inline-block;">Copy To Clipboard</button>
-                        <button onclick="generateApiKey()" style="width: max-content; display:inline-block;">Invalidate And Regenerate</button>
-                        <button onclick="deleteApiKey()" style="width: max-content; display:inline-block;">Delete Key</button>
-                    </div>
-                </div>
-                <div th:case="${false}" class="centerContent">
-                    <button onclick="generateApiKey()" style="width: max-content;">Create API Key</button>
-                </div>
+                </a>
             </div>
-        </div>
-
-        <div class="centerContent">
-            <a href="user/twofa" >Go to Two Factor Authorization console</a>
-        </div>
-
-        <div class="centercontent">
-            <a href="user/meals" >meal collection thing?</a>
-        </div>
-
-
-        <div sec:authorize="hasRole('ADMIN')" class="centerContent">
-            <h5>Links For Admin</h5>
-            <a href="/admin" >Admin Console</a>
+            <a href="user/meals" style="text-align: center">
+                <div class="borderedDiv">
+                    <h5>Personal What is for dinner!</h5>
+                </div>
+            </a>
+            <a href="user/twofa" style="text-align: center">
+                <div class="borderedDiv" style="width: auto;">
+                    <h5>Go to Two Factor Authorization console</h5>
+                </div>
+            </a>
         </div>
     </div>
 
-
+    <div class="darkDiv centerContent">
+        <h3>API KEY</h3>
+        <div th:switch="${apiKey != null}" id="apiKeyParent">
+            <div id="apiKeyDiv" th:case="${true}">
+                <div class="centerContent">
+                    <label>Api Key: </label>
+                    <label id="apiKey" th:text="${apiKey}"></label>
+                </div>
+                <div>
+                    <button id="copyButton" style="width: max-content; display:inline-block;">Copy To Clipboard</button>
+                    <button onclick="generateApiKey()" style="width: max-content; display:inline-block;">Invalidate And Regenerate</button>
+                    <button onclick="deleteApiKey()" style="width: max-content; display:inline-block;">Delete Key</button>
+                </div>
+            </div>
+            <div th:case="${false}" class="centerContent">
+                <button onclick="generateApiKey()" style="width: max-content;">Create API Key</button>
+            </div>
+        </div>
+    </div>
 
     <div id="toastsContainer"></div>
     <div th:replace="~{loadingModal :: loadingModal}"><!-- Place at bottom of page --></div>

@@ -152,6 +152,15 @@ div .darkDiv{
 }
 
 
+.clickable {
+    background-color: var(--main-highlight-color);
+    border-radius: 5px;
+    color: var(--main-highlight-text-color);
+    margin: 4px 2px;
+    padding: 4px 4px;
+}
+
+
 #toastsContainer {
     position: absolute;
     top: 0;
@@ -185,8 +194,8 @@ div .darkDiv{
 
 .toastContent {
   margin-top: 10px;
+  border: none;
 }
-
 
 
 /* Tooltip container */
