@@ -67,7 +67,15 @@ form input, select{
     background-color: var(--main-neutral-color);
 }
 
-button, form input[type=button], input[type=submit], input[type=reset] {
+input {
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    background-color: var(--main-neutral-color);
+}
+
+.longbutton, form input[type=button], input[type=submit], input[type=reset] {
     width: 100%;
     background-color: var(--main-highlight-color);
     border: none;
@@ -133,6 +141,11 @@ div .darkDiv{
     margin: 0px; /*not sure why this is needed but wihtout it page is too tall*/
 }
 
+.header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    margin: 0px; /*not sure why this is needed but wihtout it page is too tall*/
+}
 
 .containImage {
     object-fit: scale-down;
@@ -152,7 +165,8 @@ div .darkDiv{
 }
 
 
-.clickable {
+button, .clickable {
+    cursor: pointer;
     background-color: var(--main-highlight-color);
     border-radius: 5px;
     color: var(--main-highlight-text-color);

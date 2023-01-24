@@ -26,7 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
+    public UserDetailServiceImpl userDetailsService() {
         return new UserDetailServiceImpl();
     }
 
@@ -64,7 +64,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
+        http.userDetailsService(userDetailsService())
             .authorizeRequests().antMatchers(staticResources).permitAll()
             .and()
             .authorizeRequests().antMatchers("/admin/**" , "/actuator/**").hasAnyRole("ADMIN")

@@ -26,7 +26,9 @@
     </script>
 </head>
 <body>
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
     <h3 th:if="${error != null}" th:text="${error}" style="color: red;"></h3>
+    <h3 th:if="${success != null}" th:text="${success}" ></h3>
     <div class="panel-body">
         <form action="/register/submit" method="post">
             <fieldset>

@@ -1,73 +1,65 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
     <style>
         html {
             min-height: 100%;
-        }
-        body {
-            min-height: 100%;
-            width: 100%;
-            background-image: linear-gradient(to bottom, #28CBFF, #b8faff);
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-
-        .alignCenter {
-            margin: auto;
-            text-align: center;
-            vertical-align: middle;
         }
 
     </style>
     <meta charset="UTF-8">
     <title>Sprite Maker</title>
 </head>
-<body class="alignCenter" id="body">
-    <h2 style="margin-bottom: 10px">Sprite Maker</h2>
+<body>
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
+    <div class="centerContent">
+        <h2 style="margin-bottom: 10px">Sprite Maker</h2>
 
-    <div style="margin-bottom: 5px">
-        <Label>Size of Sprite  </Label>
-        <input type="number" id="width" style="width: 40px"/>
-        <label> x </label>
-        <input type="number" id="height" style="width: 40px"/>
-        <button onclick="resizeSprite()">Resize</button>
-        <button onclick="resetToCurrentSpriteSize()">Reset to sprite size</button>
-    </div>
+        <div style="margin-bottom: 5px">
+            <Label>Size of Sprite  </Label>
+            <input type="number" id="width" style="width: 50px"/>
+            <label> x </label>
+            <input type="number" id="height" style="width: 50px"/>
+            <button class="clickable" onclick="resizeSprite()">Resize</button>
+            <button class="clickable" onclick="resetToCurrentSpriteSize()">Reset to sprite size</button>
+        </div>
 
-    <div>
-        <label>Currently Selected Color:  </label>
-        <input id="colorSelector" type="color" value="#ff0000" onchange="colorOrTransparencyChange()">
-        <label>  Transparency:  </label>
-        <input type="range" id="transparency" max="255" min="0" value="255" onchange="colorOrTransparencyChange()">
+        <div>
+            <label>Currently Selected Color:  </label>
+            <input id="colorSelector" type="color" value="#ff0000" onchange="colorOrTransparencyChange()">
+            <label>  Transparency:  </label>
+            <input type="range" id="transparency" max="255" min="0" value="255" onchange="colorOrTransparencyChange()">
 
-    </div>
-    <div>
-        <label>
-            <input type="radio" name="mode" value="draw" checked> Draw
-        </label>
-        <label>
-            <input type="radio" name="mode" value="fill"> Fill
-        </label>
-        <label>
-            <input type="radio" name="mode" value="colorPicker"> Color Selector
-        </label>
-        <label>
-            <input type="radio" name="mode" value="line"> Line
-        </label>
-        <label>
-            <input type="radio" name="mode" value="selectArea"> Select Area
-        </label>
-        <button id="undoButton" onclick="undoLastDrawingChange()">undo</button>
-    </div>
-    <div style="margin-top: 20px">
-        <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
-    </div>
+        </div>
+        <div>
+            <label>
+                <input type="radio" name="mode" value="draw" checked> Draw
+            </label>
+            <label>
+                <input type="radio" name="mode" value="fill"> Fill
+            </label>
+            <label>
+                <input type="radio" name="mode" value="colorPicker"> Color Selector
+            </label>
+            <label>
+                <input type="radio" name="mode" value="line"> Line
+            </label>
+            <label>
+                <input type="radio" name="mode" value="selectArea"> Select Area
+            </label>
+            <button class="clickable" id="undoButton" onclick="undoLastDrawingChange()">undo</button>
+        </div>
+        <div style="margin-top: 20px">
+            <canvas id="spriteCanvas" style="border:1px solid #000000; background-color: white"></canvas>
+        </div>
 
-    <div style="margin-top: 10px; margin-bottom: 10px">
-        <input type="file" name="import" id="import" onchange="importImage()" accept=".png">
-        <a id="download" onclick="startDownload()" download="sprite">download as Png</a>
+        <div style="margin-top: 10px; margin-bottom: 10px">
+            <input class="clickable" type="file" name="import" id="import" onchange="importImage()" accept=".png">
+            <a id="download" class="clickable" onclick="startDownload()" download="sprite">Download as PNG</a>
+        </div>
     </div>
+    
 
 
     <script type="text/javascript" src="/js/spriteCanvas.js"></script>
