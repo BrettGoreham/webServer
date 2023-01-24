@@ -26,7 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
+    public UserDetailServiceImpl userDetailsService() {
         return new UserDetailServiceImpl();
     }
 
@@ -64,14 +64,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
+        http.userDetailsService(userDetailsService())
             .authorizeRequests().antMatchers(staticResources).permitAll()
             .and()
             .authorizeRequests().antMatchers("/admin/**" , "/actuator/**").hasAnyRole("ADMIN")
             .and()
             .authorizeRequests().antMatchers("/user/**").hasAnyRole("USER")
             .and()
-            .authorizeRequests().antMatchers("/", "/twoFactorAuthentication", "/login/**", "/whatIsForDinner/**", "/dinner/**", "/register/**", "/vinmonopolet/**", "/words/**", "/sprites/**", "/rest/**").permitAll()
+            .authorizeRequests().antMatchers("/", "/twoFactorAuthentication", "/login/**", "/logout/**", "/whatIsForDinner/**", "/dinner/**", "/register/**", "/vinmonopolet/**", "/words/**", "/sprites/**", "/rest/**").permitAll()
             .and()
             .authorizeRequests().antMatchers("/**").denyAll()
             .and()
@@ -80,7 +80,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .successForwardUrl("/login/postLogin")
             .failureUrl("/login/loginFailed")
             .and()
-            .logout().logoutUrl("/doLogout").logoutSuccessUrl("/login/logout").permitAll()
+            .logout().logoutUrl("/logout").logoutSuccessUrl("/login/logout").permitAll()
             .and()
             .exceptionHandling().accessDeniedPage("/accessDenied")
             .and()

@@ -6,6 +6,7 @@
     <title>Login</title>
 </head>
 <body>
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
     <div class="centerContent" th:if="${error != null}">
         <div class="darkDiv minContent" style="border: 3px solid red;">
             <h3  th:text="${error}" style="color: red; white-space: nowrap"></h3>
@@ -26,5 +27,6 @@
             </fieldset>
         </form>
     </div>
+    <a href="/register" class="clickable">Haven't Registered? click here! </a>
 </body>
 </html>

@@ -12,15 +12,16 @@
     </style>
 </head>
 <body>
+<header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
 
-
+<h1>Vinmonopolet has unfortunately decided to remove the public access that made this page possible.</h1>
 <h2 th:text="'Vinmonopolet results from ' + ${date}"></h2>
 
 <h5>The alcohol on this page is ranked by how much each drink costs per liter of pure alcohol in them.</h5>
 
 <div class="darkDiv" style="display: grid; place-items: center;">
     <label for="date" style="margin: 5px">Check another date: </label>
-    <input id="date" th:value="${date}" type="date" th:min="${firstDate}" th:max="${todaysDate}" style="margin: 5px; background-color: var(--main-neutral-color)"/>
+    <input id="date" th:value="${date}" type="date" th:min="${firstDate}" th:max="${date}" style="margin: 5px; background-color: var(--main-neutral-color)"/>
     <button onclick="goToDate()" style="width: 100px">Go</button>
 </div>
 
