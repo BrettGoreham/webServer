@@ -7,10 +7,10 @@
     <title>Word Search Result</title>
 </head>
 <body>
-
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
 <h3>Word Search Result</h3>
 
-<button onclick="toggle(this)" >Search Again</button>
+<button class="longbutton" onclick="toggle(this)" >Search Again</button>
 <div id="searchForm" th:insert="~{words/searchForm :: wordSearchForm}" class="formHider">
 </div>
 

@@ -2,11 +2,13 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/mealCollection.css}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Categories</title>
 </head>
 <body>
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
 <div id="mealCategoryHolder">
     <div onclick="redirectToMealsPage(this)" class="pointer mealCollection"   th:each="mealCollection : ${mealCollections}"  th:id="${mealCollection.getId()}">
         <div class="collectionName" th:text="${mealCollection.getCollectionName()}"></div>
@@ -22,13 +24,13 @@
 
 
 <!-- The Modal -->
-<div id="myModal" class="formModal">
+<div id="createModal" class="formModal">
 
     <!-- Modal content -->
-    <div class="modal-content">
+    <div class="darkDiv modal-content">
         <span class="close">&times;</span>
         <h3>Create new Meal Collection</H3>
-        <form  id="addMealCollection" action="#" method="POST">
+        <form id="addMealCollection" action="#" method="POST">
 
             <label for="mealCollectionName">Meal Collection Name</label>
             <input type="text" maxlength="255" name="mealCollectionName" id="mealCollectionName">
@@ -43,7 +45,7 @@
 <div id="editModal" class="formModal">
 
     <!-- Modal content -->
-    <div class="modal-content">
+    <div class="darkDiv modal-content">
         <span class="close">&times;</span>
         <h3>Edit Meal Collection</H3>
         <form  id="editMealCollection" action="#" method="POST">
