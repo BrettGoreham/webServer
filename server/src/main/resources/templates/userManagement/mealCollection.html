@@ -2,77 +2,79 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/default.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/mealCollection.css}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Collection</title>
 </head>
+
 <body>
-
-<h3 th:text="${mealCollection.getCollectionName()}"></h3>
-<input type="text" style="display: none;" id="mealCollectionId" th:value="${mealCollection.getId()}">
-<div>
-    <a href="./">Back to all collections</a>
-</div>
-
-
-<div id="mealHolder">
-    <div class="mealCollection"   th:each="meal : ${mealCollection.getUserMeals()}"  th:id="${meal.getId()}">
-        <div class="mealName" th:text="${meal.getMealName()}"></div>
-        <input class="disable" type="checkbox" th:checked="${meal.getIsDisabled()}" onclick="toggleMealDisabled(this)">
-        <button onclick="openEditModal(this)">edit</button>
-        <button onclick="deleteMeal(this)">delete</button>
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
+    <h3 th:text="${mealCollection.getCollectionName()}"></h3>
+    <input type="text" style="display: none;" id="mealCollectionId" th:value="${mealCollection.getId()}">
+    <div>
+        <a href="./">Back to all collections</a>
     </div>
-</div>
 
 
-<div>
-    <button onclick="openModal()">Click me to add a meal</button>
-</div>
-<div>
-    <button onclick="startSelectingShit()">Click me to select a meal randomly</button>
-</div>
-
-
-<!-- The Modal -->
-<div id="createModal" class="formModal">
-
-    <!-- Modal content -->
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Create new Meal to collection</H3>
-        <form  id="addMeal" action="#" method="POST">
-
-            <label for="mealName">Meal Name</label>
-            <input type="text" maxlength="255" name="mealName" id="mealName">
-            <label for="createIsDisabled">Is Disabled</label>
-            <input type="checkbox" name="createIsDisabled" id="createIsDisabled">
-
-            <button type="button" onclick="addMealToCollection()">Create</button>
-        </form>
+    <div id="mealHolder">
+        <div class="mealCollection"   th:each="meal : ${mealCollection.getUserMeals()}"  th:id="${meal.getId()}">
+            <div class="mealName" th:text="${meal.getMealName()}"></div>
+            <input class="disable" type="checkbox" th:checked="${meal.getIsDisabled()}" onclick="toggleMealDisabled(this)">
+            <button onclick="openEditModal(this)">edit</button>
+            <button onclick="deleteMeal(this)">delete</button>
+        </div>
     </div>
-</div>
 
 
-<!-- The Modal -->
-<div id="editModal" class="formModal">
-
-    <!-- Modal content -->
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Edit Meal</H3>
-        <form  id="editMeal" action="#" method="POST">
-            <input type="text" name="id" style="display: none">
-            <label for="editedMealName">Meal Name</label>
-            <input type="text" minlength="3" maxlength="255" name="editedMealName" id="editedMealName">
-            <label for="editIsDisabled">Is Disabled</label>
-            <input type="checkbox" name="editIsDisabled" id="editIsDisabled">
-
-            <button type="button" onclick="submitEditMeal()">Submit</button>
-        </form>
+    <div>
+        <button onclick="openModal()">Click me to add a meal</button>
     </div>
-</div>
+    <div>
+        <button onclick="startSelectingShit()">Click me to select a meal randomly</button>
+    </div>
 
 
-<div th:replace="~{loadingModal :: loadingModal}"><!-- Place at bottom of page --></div>
-<script type="text/javascript" src="/js/mealCollection.js"></script>
+    <!-- The Modal -->
+    <div id="createModal" class="formModal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Create new Meal to collection</H3>
+            <form  id="addMeal" action="#" method="POST">
+
+                <label for="mealName">Meal Name</label>
+                <input type="text" maxlength="255" name="mealName" id="mealName">
+                <label for="createIsDisabled">Is Disabled</label>
+                <input type="checkbox" name="createIsDisabled" id="createIsDisabled">
+
+                <button type="button" onclick="addMealToCollection()">Create</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- The Modal -->
+    <div id="editModal" class="formModal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Edit Meal</H3>
+            <form  id="editMeal" action="#" method="POST">
+                <input type="text" name="id" style="display: none">
+                <label for="editedMealName">Meal Name</label>
+                <input type="text" minlength="3" maxlength="255" name="editedMealName" id="editedMealName">
+                <label for="editIsDisabled">Is Disabled</label>
+                <input type="checkbox" name="editIsDisabled" id="editIsDisabled">
+
+                <button type="button" onclick="submitEditMeal()">Submit</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div th:replace="~{loadingModal :: loadingModal}"><!-- Place at bottom of page --></div>
+    <script type="text/javascript" src="/js/mealCollection.js"></script>
 </body>

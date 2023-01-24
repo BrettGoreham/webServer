@@ -44,6 +44,8 @@ public class RegisterUserController {
             redirectAttributes.addFlashAttribute("error", "Recaptcha validation failed");
         }
 
+        redirectAttributes.addAttribute("success", "Registration email sent");
+
         return "redirect:/register";
     }
 

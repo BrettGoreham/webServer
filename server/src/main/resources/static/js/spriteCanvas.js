@@ -691,12 +691,13 @@ class spriteCanvas {
 
         let minMax = this.getMinAndMaxXAndYFromSelectedArea();
         let xcoord = ((minMax.minX) * this.pixelSize) + this.canvas.offsetLeft;
-        let ycoord = ((minMax.minY) * this.pixelSize) + this.canvas.offsetTop - 30;
+        let ycoord = ((minMax.minY) * this.pixelSize) + this.canvas.offsetTop - 40;
 
         this.SelectedAreaButtons = [];
         let spriteCanvas = this;
 
         let resizeButton = document.createElement("button");
+        resizeButton.classList.add("clickable")
         resizeButton.innerHTML = "Resize Sprite";
         resizeButton.style.position = 'absolute';
         resizeButton.style.top = ycoord + "px";
@@ -708,6 +709,7 @@ class spriteCanvas {
         document.body.appendChild(resizeButton);
 
         let copyButton = document.createElement("button");
+        copyButton.classList.add("clickable")
         copyButton.innerHTML = "Copy";
         copyButton.style.position = 'absolute';
         copyButton.style.top =  ycoord + "px";
@@ -722,6 +724,7 @@ class spriteCanvas {
         if (this.copiedSection != null) {
 
             let pasteButton = document.createElement("button");
+            pasteButton.classList.add("clickable")
             pasteButton.innerHTML = "Paste";
             pasteButton.style.position = 'absolute';
             pasteButton.style.top = ycoord + "px";
