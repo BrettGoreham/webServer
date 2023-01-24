@@ -3,11 +3,8 @@ package integration;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import integration.Vinmonopolet.GetDetailResponse;
-import org.springframework.http.converter.json.GsonHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import vinmonopolet.restclient.ApiException;
-import vinmonopolet.restclient.ApiResponse;
-import vinmonopolet.restclient.JSON;
 import vinmonopolet.restclient.api.DefaultApi;
 
 import java.lang.reflect.Type;

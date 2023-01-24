@@ -8,7 +8,6 @@ public enum Roles {
 
 
     public static List<Roles> getDefaultRoles() {
-        List defaultRoles = List.of(ROLE_USER);
-        return defaultRoles;
+        return List.of(ROLE_USER);
     }
 }
