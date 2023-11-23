@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    
+    <div id="__colorPickerBox__" th:fragment="colorBox" class="darkDiv" style="position: fixed; bottom: 50px; left: -275px; transition: left 0.5s;">
+        <h3 class="centerContent">Page Color Scheme</h5>
+        <div id="colorTypes">
+
+        </div>
+        <button onclick="reset();">Reset</button>
+        <button onclick="randomizeColors()">Randomize</button>
+        <button onclick="colorApply();">Apply</button>
+
+        <script type="text/javascript" th:src="@{/js/colorBox.js}"></script>
+    </div>
+
+     
+</body>
+
+</html>

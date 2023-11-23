@@ -10,14 +10,15 @@
     
     <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
     
-    
     <div class="autoColumnGrid" style="align-content: center">
-        <a href="/vinmonopolet" style="text-align: center">
+
+        <a href="/games/stianstorment" style="text-align: center">
             <div class="darkDiv">
-                <h4>Vinmonopolet's Cheapest Alcohol</h4>
-                <img class="fillImage" src="/images/vinmonopoletIcon.png">
+                <h4>Stians Torment</h4>
+                <img class="fillImage" src="/images/game/stian.png">
             </div>
         </a>
+        
         <a href="/sprites/maker" style="text-align: center">
             <div class="darkDiv">
                 <h4>Sprite Creator</h4>
@@ -30,21 +31,26 @@
                 <img class="fillImage" src="/images/hamburger.png">
             </div>
         </a>
-        <a href="/twoFactorAuthentication" style="text-align: center">
-            <div class="darkDiv">
-                <h4>Unreliable Two Factor Authentication</h4>
-                <img class="fillImage" src="/images/twofa.png">
-            </div>
-        </a>
         <a href="/words" style="text-align: center">
             <div class="darkDiv">
                 <h4>Word Search</h4>
                 <img class="fillImage" src="/images/findbook.png">
             </div>
         </a>
+        <a href="/vinmonopolet" style="text-align: center">
+            <div class="darkDiv">
+                <h4>Vinmonopolet's Cheapest Alcohol</h4>
+                <img class="fillImage" src="/images/vinmonopoletIcon.png">
+            </div>
+        </a>
+        <a href="/twoFactorAuthentication" style="text-align: center">
+            <div class="darkDiv">
+                <h4>Unreliable Two Factor Authentication</h4>
+                <img class="fillImage" src="/images/twofa.png">
+            </div>
+        </a>
     </div>
 
-    <!--<div style="background: #00E1EF; text-align: center;"> div</div>-->
     <footer>
         <div style="height: inherit">
             <a href="https://github.com/BrettGoreham/webServer" target="_blank">
@@ -55,5 +61,6 @@
             </a>
         </div>
     </footer>
+    <div th:insert="~{generalFragments/colorPicker :: colorBox}"></div>
 </body>
 </html>

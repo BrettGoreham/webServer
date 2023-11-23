@@ -33,77 +33,35 @@
     <script type="text/javascript" src="/js/toastMaker.js"></script>
 </head>
 <body>
-    <script>
-
-        function collectAndSendForUpdate() {
-            let checkedOptions = document.querySelectorAll('input[class=toConfirm]:checked');
-            let action = document.querySelector('input[name="mode"]:checked').value
-
-            if (checkedOptions.length == 0) {
-                createErrorToast("No options selected to confirm");
-            }
-            else {
-                document.body.classList.add("loading");
-
-                var xhr =  new XMLHttpRequest();
-                xhr.timeout = 10000;
-                xhr.open('POST', '/admin/rest/acceptCategory');
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        if (xhr.responseURL.endsWith("login")) {
-                            createErrorToast("You have been logged off :(")
-                        } else {
-                            removeOptionsAfterAcceptCategory(
-                                JSON.parse(xhr.responseText),
-                                action
-                            );
-                        }
-                    }
-                    else {
-                        createErrorToast("failed to save");
-                    }
-
-                    document.body.classList.remove("loading")
-                };
-
-
-                xhr.ontimeout = () => {
-                    createErrorToast("Failed to reach server")
-                    document.body.classList.remove("loading")
-                };
-                xhr.onerror = xhr.ontimeout
-                xhr.send(getJsonForAcceptCategory(checkedOptions, action));
-            }
-        }
-
-        function getJsonForAcceptCategory(checkedOptions, action) {
-            let checkedValues = []
-            for(var i=0; i < checkedOptions.length; i++){
-                checkedValues.push(checkedOptions[i].value);
-            }
-
-            let json = {}
-            json.action = action
-            json.ids = checkedValues
-
-            return JSON.stringify(json)
-        }
-
-
-        function removeOptionsAfterAcceptCategory(listOfCategoriesChanged, change) {
-            let namesOfAccepted = []
-
-            for (let i = 0; i < listOfCategoriesChanged.length; i++) {
-                let element = document.getElementById(listOfCategoriesChanged[i]);
-                namesOfAccepted.push(element.children[0].name)
-                element.parentNode.removeChild(element)
-            }
-
-            createSuccessToast("The following categories have been  " + change + "\n" + namesOfAccepted)
-        }
-    </script>
+    
+    <header id="header" th:insert="~{generalFragments/header :: userHeader}"></header>
     <h1>Admin Panel</h1>
+
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center">
+        <div class="darkDiv" style="flex: 1 0 500px;">
+            <script th:inline="javascript">
+                /*<![CDATA[*/
+                    var users = /*[[${users}]]*/ {};
+                /*]]>*/
+            </script>
+            <h3>Give Or take Roles from users!</h3>
+            <div class="borderedDiv">
+                <select id="userSelect">
+                    <option label=""></option>
+                    <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.username}"></option>
+                </select>
+
+                <select id="roleSelect">
+                    <option label=""></option>
+                    <option th:each="role : ${roles}" th:value="${role}" th:text="${role}"></option>
+                </select>
+
+            </div>
+            <button id="takeRoleButton" onclick="TakeUserRole()" disabled>Take</button>
+            <button id="giveRoleButton" onclick="GiveUserRole()" disabled>Give</button>
+        </div>
+    </div>
 
     <div style="display: flex; flex-wrap: wrap; justify-content: center">
         <div class="darkDiv" style="flex: 1 0 500px;">
@@ -130,8 +88,37 @@
         </div>
     </div>
 
+    <div style="display: flex; flex-wrap: wrap; justify-content: center">
+        <div class="darkDiv" style="flex: 1 0 500px;">
+            <h3>Unconfirmed options to be confirmed or denied</h3>
+            <div class="centerContent">
+                <div>
+                    <label>
+                        <input type="radio" name="optionsMode" value="CONFIRMED" checked> Confirm
+                    </label>
+                    <label>
+                        <input type="radio" name="optionsMode" value="DENIED"> Deny
+                    </label>
+                </div>
+            </div>
+            <div class="borderedDiv">
+                <ul>
+                    <li style="width: 350px; text-align: left;" th:each="option : ${unconfirmedOptions}" th:id="'option' + ${option.id}">
+                        <input type="checkbox" class="options" th:name="${option.mealName}" th:value="${option.id}">
+                        <label th:text="${option.mealName}"></label>
+                    </li>
+                </ul>
+            </div>
+            <button onclick="sendOptionsForUpdate()">Save</button>
+        </div>
+    </div>
+
 
     <div id="toastsContainer"></div>
     <div class="modal"><!-- Place at bottom of page --></div>
+    <div th:insert="~{generalFragments/colorPicker :: colorBox}"></div>
+
+    <script type="text/javascript" src="/js/admin/adminUserControl.js"></script>
+    <script type="text/javascript" src="/js/admin/adminMeals.js"></script>
 </body>
 </html>

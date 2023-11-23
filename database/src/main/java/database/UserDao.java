@@ -1,6 +1,9 @@
 package database;
 
+import model.MealOption;
+import model.StatusEnum;
 import model.user.Roles;
+import model.user.SimpleUser;
 import model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,7 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -23,8 +26,12 @@ public class UserDao {
 
     static final String insertUser = "INSERT INTO USERS (username, password, email, role_list) VALUES (?, ?, ?, ?);";
     static final String selectUserByUserName = "select * from USERS where username = ?;";
+    static final String selectUserById= "select id, username, role_list from USERS where id = ?;";
+    static final String selectSimpleUser = "select id, username, role_list from USERS";
     static final String createUserConfirmationToken = "INSERT INTO USER_CONFIRMATION_TOKENS(fk_user, token) VALUES (?, ?);";
     static final String getUserToConfirmationFromToken = "SELECT fk_user FROM USER_CONFIRMATION_TOKENS where token = ?";
+
+    static final String SetUserRoleList = "UPDATE USERS set role_list = ? where id = ?";
     static final String enableUser = "UPDATE USERS set enabled = 1 where id = ?";
     static final String deleteTokenByUserId = "DELETE FROM USER_CONFIRMATION_TOKENS where fk_user = ?";
     /**
@@ -63,6 +70,30 @@ public class UserDao {
                     ).stream().map(Roles::valueOf).collect(Collectors.toList())
                 )
         );
+    }
+
+    public List<SimpleUser> getUserList() {
+
+        List<SimpleUser> users = new ArrayList<>();
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(selectSimpleUser);
+
+
+        for (Map<String, Object> row : rows)  {
+            SimpleUser user = new SimpleUser(
+                    (int) row.get("id"),
+                    (String) row.get("username"),
+                    DatabaseUtil.splitCommaDelimatedStringFromDatabase(
+                            (String) row.get("role_list")
+                    ).stream().map(Roles::valueOf).collect(Collectors.toList())
+
+            );
+
+            users.add(user);
+        }
+        users.sort(Comparator.comparing(SimpleUser::getUsername));
+
+        return users;
+
     }
 
     public int createUser(User user) {
@@ -122,6 +153,32 @@ public class UserDao {
                     .prepareStatement(deleteTokenByUserId);
 
             ps.setInt(1, userId);
+            return ps;
+        });
+    }
+    public SimpleUser getUserById(int id){
+
+        return jdbcTemplate.queryForObject(
+                selectUserById,
+                (rs, rownum) ->
+                        new SimpleUser(
+                                rs.getLong("id"),
+                                rs.getString("username"),
+                                DatabaseUtil.splitCommaDelimatedStringFromDatabase(
+                                        rs.getString("role_list")
+                                ).stream().map(Roles::valueOf).collect(Collectors.toList())
+                        ),
+
+                id);
+    }
+
+    public void SetRoleListForUser(int id, List<Roles> roles) {
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(SetUserRoleList);
+
+            ps.setString(1, DatabaseUtil.createCommaDelimatedStringForDatabase(roles));
+            ps.setInt(2, id);
             return ps;
         });
     }

@@ -15,4 +15,8 @@ public class IndexServlet {
     public String twofa() {
         return "twoFactorExplain";
     }
+
+
+    @GetMapping("/games/stianstorment")
+    public String game() {return "game"; }
 }

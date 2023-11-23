@@ -61,4 +61,8 @@ public class WhatIsForDinnerService {
             return mealDao.updateRecipe(recipeId, title, ingredients, instructions);
         }
     }
+
+    public List<MealOption> GetMealOptionsWithStatus(StatusEnum status) {
+        return mealDao.GetMealOptionsWithStatus(status);
+    }
 }

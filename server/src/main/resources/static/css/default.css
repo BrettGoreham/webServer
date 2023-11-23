@@ -4,7 +4,7 @@
     --main-neutral-color: #666666;
     --main-highlight-color: #ffe082;
     --main-highlight-text-color: #4d7d42;
-    --main-text-color: #EEEEEE;
+    --main-text-color: #eeeeee;
     --main-secondary-color: #abdf9d;
 
 }/**/
@@ -172,6 +172,13 @@ button, .clickable {
     color: var(--main-highlight-text-color);
     margin: 4px 2px;
     padding: 4px 4px;
+}
+
+button:disabled,
+button[disabled]{
+  border: 1px solid #999999;
+  background-color: var(--main-neutral-color);;
+  cursor: default;
 }
 
 

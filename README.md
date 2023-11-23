@@ -21,7 +21,7 @@ To create a jar of the project run.
    
    This will create a jar in webServer/target/docker/
     That is runnable (example below).
-    java -jar jarFileName.Jar --spring-boot.run.profiles=dev 
+    java -jar -Dspring.profiles.active=dev jarname.jar
     
     
 Docker. From the docker file edit it to have the correct release version (from webserver folder)

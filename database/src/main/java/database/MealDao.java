@@ -30,29 +30,26 @@ public class MealDao {
     private final static String getMealCategories = "select * from MEAL_CATEGORIES";
 
     private final static String getMealCategoriesWithMealOptions =
-        new StringBuilder()
-            .append("select category.id as id, category.category_name, category.status as category_status,")
-            .append("options.id as option_id, options.meal_name, options.status as option_status, options.fk_meal_category ")
-            .append("from MEAL_CATEGORIES category left join MEAL_OPTIONS options ")
-            .append("ON category.id = options.fk_meal_category ORDER BY id;").toString();
+            "select category.id as id, category.category_name, category.status as category_status," +
+                    "options.id as option_id, options.meal_name, options.status as option_status, options.fk_meal_category " +
+                    "from MEAL_CATEGORIES category left join MEAL_OPTIONS options " +
+                    "ON category.id = options.fk_meal_category ORDER BY id;";
 
     private final static String getCONFIRMEDMealCategoriesWithMealOptions =
-        new StringBuilder()
-            .append("select category.id as id, category.category_name, category.status as category_status, ")
-            .append("options.id as option_id, options.meal_name, options.status as option_status, options.fk_meal_category ")
-            .append("from MEAL_CATEGORIES category left join MEAL_OPTIONS options ")
-            .append("ON category.id = options.fk_meal_category ")
-            .append("WHERE category.status = 'CONFIRMED' AND options.status = 'CONFIRMED' ")
-            .append("ORDER BY id;").toString();
+            "select category.id as id, category.category_name, category.status as category_status, " +
+                    "options.id as option_id, options.meal_name, options.status as option_status, options.fk_meal_category " +
+                    "from MEAL_CATEGORIES category left join MEAL_OPTIONS options " +
+                    "ON category.id = options.fk_meal_category " +
+                    "WHERE category.status = 'CONFIRMED' AND options.status = 'CONFIRMED' " +
+                    "ORDER BY id;";
 
     private final static String getMealOptionInfoByCategoryAndOptionName =
-        new StringBuilder()
-            .append("SELECT options.id as id, options.description as description, options.main_ingredients as main_ingredients, category.id as category_id, ")
-            .append("recipes.id as recipe_id, recipes.title as recipe_title, recipes.ingredients as recipe_ingredients, recipes.instructions as recipe_instructions ")
-            .append("FROM MEAL_CATEGORIES category ")
-            .append("INNER JOIN MEAL_OPTIONS options ON category.id = options.fk_meal_category ")
-            .append("LEFT JOIN MEAL_OPTION_RECIPES recipes ON options.id = recipes.fk_meal_option ")
-            .append("WHERE category.category_name = ? AND options.meal_name = ?").toString();
+            "SELECT options.id as id, options.description as description, options.main_ingredients as main_ingredients, category.id as category_id, " +
+                    "recipes.id as recipe_id, recipes.title as recipe_title, recipes.ingredients as recipe_ingredients, recipes.instructions as recipe_instructions " +
+                    "FROM MEAL_CATEGORIES category " +
+                    "INNER JOIN MEAL_OPTIONS options ON category.id = options.fk_meal_category " +
+                    "LEFT JOIN MEAL_OPTION_RECIPES recipes ON options.id = recipes.fk_meal_option " +
+                    "WHERE category.category_name = ? AND options.meal_name = ?";
 
 
 
@@ -71,6 +68,8 @@ public class MealDao {
     private final static String getCountOfSuggestedCategories = "SELECT category_name FROM MEAL_CATEGORIES WHERE status = 'SUGGESTED'";
 
     private final static String getCountOfSuggestedOptions = "SELECT meal_name FROM MEAL_OPTIONS WHERE status = 'SUGGESTED'";
+
+    private final static String getMealCategoriesWithStatus = "Select id, meal_name, status, fk_meal_category from MEAL_OPTIONS WHERE status = ?";
 
     private final static String updateOptionDescriptionAndIngredients = "UPDATE MEAL_OPTIONS SET description = :description, main_ingredients = :ingredients WHERE id = :id;";
 
@@ -245,6 +244,26 @@ public class MealDao {
 
         return jdbcTemplate.queryForList(getCountOfSuggestedOptions, String.class);
     }
+
+    public List<MealOption> GetMealOptionsWithStatus(StatusEnum status) {
+        List<MealOption> options = new ArrayList<>();
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(getMealCategoriesWithStatus, status.toString());
+
+        for (Map<String, Object> row : rows)  {
+            MealOption option = new MealOption(
+                    (int) row.get("id"),
+                    (String) row.get("meal_name"),
+                    StatusEnum.valueOf((String) row.get("status")),
+                    (int) row.get("fk_meal_category")
+            );
+
+            options.add(option);
+        }
+
+        return options;
+    }
+
 
     public MealOption getMealOptionWithRecipesFromStrings(String mealCategory, String mealName) {
 
@@ -507,4 +526,6 @@ public class MealDao {
             }
         }
     }
+
+
 }

@@ -2,6 +2,7 @@ package webServer.userManagement;
 
 import database.UserDao;
 import model.user.Roles;
+import model.user.SimpleUser;
 import model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import webServer.exceptions.InvalidInputException;
 import webServer.scheduledTasks.ScheduledEmails;
+
+import java.util.List;
 
 
 @Service
@@ -54,5 +57,4 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
         userDao.enableUserAndDeleteConfirmationToken(userId);
     }
-
 }

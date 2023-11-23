@@ -21,13 +21,10 @@ public class DatabaseUtil {
     //inverse of splitCommaDelimatedStringFromDatabase
     public static <T> String createCommaDelimatedStringForDatabase(List<T> strings) {
         if (strings != null && !strings.isEmpty()) {
-            return String.join(
-                ",",
-                strings
-                    .stream()
-                    .map(string -> string.toString())
-                    .collect(Collectors.toList())
-            );
+            return strings
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(","));
         }
         else {
             return null;
