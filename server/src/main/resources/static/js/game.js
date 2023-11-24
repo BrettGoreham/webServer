@@ -530,6 +530,12 @@ function CreateGameoverScene(appwidth, appheight){
         .on('pointerdown', reset)
     scene.addChild(resetbutton)
 
+    let reds = maxscore - score;
+    let scoreText = new PIXI.Text("🟩".repeat(score) + "🟥".repeat(reds), style);
+    scoreText.x = (appwidth / 2) - 600;
+    scoreText.y = (appheight / 2) - 50;
+    scene.addChild(scoreText);    
+
     return scene
 }
 
