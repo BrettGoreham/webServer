@@ -530,6 +530,29 @@ function CreateGameoverScene(appwidth, appheight){
         .on('pointerdown', reset)
     scene.addChild(resetbutton)
 
+    let reds = maxscore - score;
+    let scoreText = new PIXI.Text("🟩".repeat(score) + "🟥".repeat(reds), style);
+    scoreText.x = (appwidth / 2) - 600;
+    scoreText.y = (appheight / 2) - 50;
+    scene.addChild(scoreText);
+
+    let copyButton = new PIXI.Text("Copy score", style2);
+    copyButton.x = appwidth / 3;
+    copyButton.y = appheight / 3;
+    copyButton.interactive = true;
+    copyButton.cursor = "pointer";
+    copyButton.on("mousedown",     
+        navigator.clipboard.writeText( "stianstorment\n" + scoreText.text)
+                .then(function () {
+                    console.log("Copied score to user's clipboard")
+                })
+                .catch(function (err) {
+                    console.error('Unable to copy to clipboard', err);
+                });
+    );
+
+    scene.addChild(copyButton);
+
     return scene
 }
 
