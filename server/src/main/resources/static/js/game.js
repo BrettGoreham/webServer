@@ -542,7 +542,7 @@ function CreateGameoverScene(appwidth, appheight){
     copyButton.interactive = true;
     copyButton.cursor = "pointer";
     copyButton.on("mousedown",     
-        navigator.clipboard.writeText(scoreText.text)
+        navigator.clipboard.writeText( "stianstorment\n" + scoreText.text)
                 .then(function () {
                     console.log("Copied score to user's clipboard")
                 })
