@@ -1,6 +1,7 @@
 package webServer.scheduledTasks;
 
 import database.MealDao;
+import kotlin.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import webServer.secretSanta.Person;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -129,5 +131,32 @@ public class ScheduledEmails {
         context.setVariable("baseUrl", baseUrl);
 
         return templateEngine.process("userManagement/registrationEmail", context);
+    }
+
+
+    public void sendSecretSantaEmail(Pair<Person, Person> fromTo) {
+        MimeMessage message = emailSender.createMimeMessage();
+        MimeMessageHelper helper = null;
+        try {
+            helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(fromEmailAddr);
+            helper.setTo(fromTo.component2().getEmail());
+            helper.setSubject("Please Confirm your Registration");
+            helper.setText(generateSecretSantaContent(fromTo.component1().getName(), fromTo.component2().getName()),true);
+
+            emailSender.send(message);
+
+        } catch (MessagingException e) {
+            System.out.println(e);
+        }
+    }
+
+    private String generateSecretSantaContent(String fromName, String toName) {
+        Context context = new Context();
+        context.setVariable("fromName", fromName);
+        context.setVariable("toName", toName);
+
+        return templateEngine.process("secretSanta/secretSantaEmail", context);
     }
 }
